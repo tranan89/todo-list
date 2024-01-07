@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"outDir": "./dist",
+		"sourceMap": true,
+		"jsx": "react-jsx",
+		"target": "es2022",
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"moduleResolution": "node",
+		"strict": true,
+		"skipLibCheck": true,
+		"plugins": [
+			{
+				"name": "typescript-plugin-css-modules",
+			}
+		],
+		"module": "CommonJS"
+	},
+	"include": ["src"]
+}

@@ -1,0 +1,59 @@
+:root {
+	--spacingXL: 2rem;
+	--spacingL: 1.5rem;
+	--spacingM: 1rem;
+	--spacingS: 0.75rem;
+	--spacingXS: 0.5rem;
+	--spacingXXS: 0.25rem;
+
+	--borderColor: rgb(0,0,0,0.35);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body,
+input,
+select,
+textarea {
+	font-size: 16px;
+	font-family: Lato, sans-serif;
+	color: rgba(0, 0, 0, 0.8);
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+html {
+	height: 100%;
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100%;
+	height: 100%;
+	margin: 0;
+	position: relative;
+	overflow-y: hidden;
+}
+
+:global #root {
+	height: 100%;
+}
+main {
+	height: 100%;
+}
+
+ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+p {
+	margin: 0;
+}

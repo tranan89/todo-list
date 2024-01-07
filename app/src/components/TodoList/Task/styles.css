@@ -1,0 +1,17 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+.name {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin-bottom: var(--spacingS);
+	border: none;
+	outline: none;
+}
+.description {
+	border: none;
+	outline: none;
+	flex: 1;
+}
