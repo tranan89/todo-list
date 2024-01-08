@@ -66,6 +66,7 @@ export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
 				name: Joi.string().required(),
 				description: Joi.string().required(),
 			})
+			.unknown()
 			.required(),
 	});
 	const {
