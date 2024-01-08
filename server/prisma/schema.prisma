@@ -14,7 +14,8 @@ model TodoList {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  list      String[] @db.VarChar(255)
+  name      String   @db.VarChar(255)
+  taskIds   Int[]
 }
 
 model TodoTask {

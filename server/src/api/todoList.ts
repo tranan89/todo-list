@@ -3,7 +3,7 @@ import db from '../database.js';
 import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
 
-export const getTaskById = async (ctx: Context): Promise<void> => {
+export const getListById = async (ctx: Context): Promise<void> => {
 	ctx.validate({
 		params: Joi.object()
 			.keys({
@@ -16,7 +16,7 @@ export const getTaskById = async (ctx: Context): Promise<void> => {
 	});
 	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
 
-	const data = await db.todoTask.findUnique({
+	const data = await db.todoList.findUnique({
 		where: {
 			id: ctx.parsedParams.id,
 		},
@@ -26,12 +26,12 @@ export const getTaskById = async (ctx: Context): Promise<void> => {
 	ctx.body = { data };
 };
 
-interface createTaskContext extends Context {
+interface createListContext extends Context {
 	parsedRequestBody: {
 		name: string;
 	};
 }
-export const createTask = async (ctx: createTaskContext): Promise<void> => {
+export const createList = async (ctx: createListContext): Promise<void> => {
 	ctx.validate({
 		body: Joi.object()
 			.keys({
@@ -42,18 +42,18 @@ export const createTask = async (ctx: createTaskContext): Promise<void> => {
 	});
 	const { parsedRequestBody } = ctx;
 
-	const { id } = await db.todoTask.create({ data: parsedRequestBody });
+	const { id } = await db.todoList.create({ data: parsedRequestBody });
 
 	ctx.body = { data: { id } };
 };
 
-interface updateTaskContext extends Context {
+interface updateListContext extends Context {
 	parsedRequestBody: {
 		name?: string;
-		description?: string;
+		taskIds?: number[];
 	};
 }
-export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
+export const updateListById = async (ctx: updateListContext): Promise<void> => {
 	ctx.validate({
 		params: Joi.object()
 			.keys({
@@ -62,9 +62,10 @@ export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
 			.required(),
 		body: Joi.object()
 			.keys({
-				name: Joi.string().required(),
-				description: Joi.string().required(),
+				name: Joi.string(),
+				taskIds: Joi.array().items(Joi.number()),
 			})
+			.min(1)
 			.unknown()
 			.required(),
 	});
@@ -73,7 +74,7 @@ export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
 		parsedParams: { id },
 	} = ctx;
 
-	await db.todoTask.update({
+	await db.todoList.update({
 		where: {
 			id,
 		},

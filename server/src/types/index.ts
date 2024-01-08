@@ -2,7 +2,12 @@ import type { DefaultContext } from 'koa';
 
 export type TodoTask = {
 	name: string;
-	description: string;
+	description?: string;
+};
+
+export type TodoList = {
+	name: string;
+	taskIds?: number[];
 };
 
 interface ValidateContext {
