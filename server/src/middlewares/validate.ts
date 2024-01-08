@@ -42,10 +42,16 @@ const validate = (ctx: Context) => (schemas: Schemas) => {
 		}
 	}
 	if (paramsSchema) {
-		const { error } = paramsSchema.validate(params);
+		const { error, value } = paramsSchema.validate(params);
 
 		if (error) {
 			errorMsg += `Params validation error: ${error.message} `;
+		} else {
+			ctx.parsedParams = {
+				// Parse numbers and booleans from strings and set defaults
+				// can't mutate ctx.query
+				...value,
+			};
 		}
 	}
 	errorMsg = errorMsg.trim();

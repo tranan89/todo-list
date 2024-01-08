@@ -27,8 +27,40 @@ export const getTaskById = async (ctx: Context): Promise<void> => {
 	ctx.body = { data };
 };
 
-export const createTask = async (ctx: Context): Promise<void> => {
+interface createTaskContext extends Context {
+	parsedRequestBody: {
+		name: string;
+	};
+}
+export const createTask = async (ctx: createTaskContext): Promise<void> => {
 	ctx.validate({
+		body: Joi.object()
+			.keys({
+				name: Joi.string().required(),
+			})
+			.unknown()
+			.required(),
+	});
+	const { parsedRequestBody } = ctx;
+
+	const { id } = await db.todoTask.create({ data: parsedRequestBody });
+
+	ctx.body = { data: { id } };
+};
+
+interface updateTaskContext extends Context {
+	parsedRequestBody: {
+		name?: string;
+		description?: string;
+	};
+}
+export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
+	ctx.validate({
+		params: Joi.object()
+			.keys({
+				id: Joi.number().required(),
+			})
+			.required(),
 		body: Joi.object()
 			.keys({
 				name: Joi.string().required(),
@@ -36,9 +68,17 @@ export const createTask = async (ctx: Context): Promise<void> => {
 			})
 			.required(),
 	});
-	const { parsedRequestBody } = ctx;
+	const {
+		parsedRequestBody,
+		parsedParams: { id },
+	} = ctx;
 
-	const { id } = await db.todoTask.create({ data: parsedRequestBody });
+	await db.todoTask.update({
+		where: {
+			id,
+		},
+		data: parsedRequestBody,
+	});
 
 	ctx.body = { data: { id } };
 };

@@ -7,8 +7,8 @@ const router = new Router({
 });
 
 router
-	// .get('/contacts', todoTask.getContracts)
 	.get('/todo-tasks/:id', todoTask.getTaskById)
+	.patch('/todo-tasks/:id', todoTask.updateTaskById)
 	.post('/todo-tasks', todoTask.createTask);
 
 export default router;

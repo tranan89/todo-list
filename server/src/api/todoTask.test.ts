@@ -78,6 +78,10 @@ describe('todo-task', () => {
 	});
 
 	describe('createTask', () => {
+		const mockTodoTask = {
+			name: 'Employment Agreement',
+		};
+
 		it('create task', async () => {
 			const response = await request.post(`/api/todo-tasks`).send(mockTodoTask);
 
@@ -88,10 +92,37 @@ describe('todo-task', () => {
 		});
 
 		describe('assert body', () => {
+			it(`assert name`, async () => {
+				const response = await request.post(`/api/todo-tasks`).send({ ['name']: undefined });
+
+				expect(response.status).toBe(400);
+				expect(response.text).toEqual(`Body validation error: "name" is required`);
+			});
+		});
+	});
+
+	describe('updateTask', () => {
+		it('update task name and description', async () => {
+			const { id } = await db.todoTask.create({ data: mockTodoTask });
+
+			const updatedTask = {
+				name: 'Grocery Shopping',
+				description: 'Milk, Eggs, Bread',
+			};
+
+			const response = await request.patch(`/api/todo-tasks/${id}`).send(updatedTask);
+
+			const data = await db.todoTask.findFirst();
+
+			expect(response.status).toBe(200);
+			expect(data).toEqual(expect.objectContaining({ ...updatedTask, id }));
+		});
+
+		describe('assert body', () => {
 			Object.keys(mockTodoTask).forEach((key: string) => {
 				it(`assert ${key}`, async () => {
 					const response = await request
-						.post(`/api/todo-tasks`)
+						.patch(`/api/todo-tasks/12`)
 						.send({ ...mockTodoTask, [key]: undefined });
 
 					expect(response.status).toBe(400);

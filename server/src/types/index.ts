@@ -6,12 +6,11 @@ export type TodoTask = {
 };
 
 interface ValidateContext {
+	parsedParams: {
+		id?: number;
+	};
 	parsedQuery: {
 		include?: string[];
-	};
-	parsedRequestBody: {
-		name: string;
-		description: string;
 	};
 }
 
