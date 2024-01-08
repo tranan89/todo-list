@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "module": "nodenext"
+  },
+  "include": ["src"]
+}
