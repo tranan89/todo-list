@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
+import ListPanel from '../../ListPanel/ListPanel';
 import styles from './styles.css';
 import { type TodoTask } from './types';
 import AddTask from './AddTask/AddTask';
-import List from './List/List';
+import Tasks from './Tasks/Tasks';
 import Task from './Task/Task';
 
-const TodoList = () => {
+const TodoTasks = () => {
 	const [taskList, setTaskList] = useState<TodoTask[]>([]);
 	const [selectedTask, setSelectedTask] = useState<TodoTask>();
 
@@ -30,22 +31,22 @@ const TodoList = () => {
 	}, []);
 
 	return (
-		<div className={styles.root}>
-			<div className={styles.leftPanel}>
+		<>
+			<ListPanel className={styles.tasks}>
 				<AddTask onTaskCreated={addTask} />
-				<List
+				<Tasks
 					taskList={taskList}
 					selectedTask={selectedTask}
 					onTaskSelected={(task: TodoTask) => setSelectedTask(task)}
 				/>
-			</div>
+			</ListPanel>
 			<div className={styles.task}>
 				{selectedTask && (
 					<Task task={selectedTask} key={selectedTask.id} onTaskUpdated={updateTask} />
 				)}
 			</div>
-		</div>
+		</>
 	);
 };
 
-export default TodoList;
+export default TodoTasks;

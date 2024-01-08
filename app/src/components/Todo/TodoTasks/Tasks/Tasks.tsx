@@ -8,7 +8,7 @@ interface Props {
 	selectedTask?: TodoTask;
 }
 
-const List = (props: Props) => {
+const Tasks = (props: Props) => {
 	const { onTaskSelected, taskList, selectedTask } = props;
 
 	return (
@@ -26,4 +26,4 @@ const List = (props: Props) => {
 	);
 };
 
-export default List;
+export default Tasks;
