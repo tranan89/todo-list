@@ -1,9 +1,0 @@
-.tasks {
-	padding-left: var(--spacingL);
-}
-
-.task {
-	flex: 1;
-	max-width: 600px;
-	padding-left: var(--spacingL);
-}

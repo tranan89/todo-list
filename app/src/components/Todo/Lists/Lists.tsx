@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import ListPanel from '../../ListPanel/ListPanel';
 import styles from './styles.css';
 
-const TodoLists = () => {
+const Lists = () => {
 	return (
-		<ListPanel>
+		<>
 			<p>TODO: TodoLists</p>
-		</ListPanel>
+		</>
 	);
 };
 
-export default TodoLists;
+export default Lists;
