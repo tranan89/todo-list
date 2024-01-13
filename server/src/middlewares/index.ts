@@ -11,11 +11,11 @@ const middlewares = ({ ioServer }: { ioServer: Server }) =>
 	compose([
 		headers(),
 		logger(),
+		// TODO: add useful headers to ctx.state, error handler, metrics etc
 		requestLogging(),
 		bodyParser(),
 		validate(),
 		io({ ioServer }),
-		// TODO: add header parser, error handler, metrics etc
 	]);
 
 export default middlewares;

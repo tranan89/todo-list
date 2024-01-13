@@ -4,7 +4,7 @@ import TestAgent from 'supertest/lib/agent.js';
 import { type Server } from 'http';
 import createHttpServer from '../createHttpServer.js';
 import db from '../database.js';
-import { TodoList } from '../types/index.js';
+import { TodoListMock } from '../types/tests.js';
 import * as ioMiddleware from '../middlewares/io.js';
 import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
@@ -12,7 +12,7 @@ describe('todo-list', () => {
 	let app: Server;
 	let request: TestAgent<Test>;
 	let ioSpies: { emit: jest.SpyInstance; joinRoom: jest.SpyInstance; leaveRoom: jest.SpyInstance };
-	const mockTodoList: TodoList = {
+	const mockTodoList: TodoListMock = {
 		name: 'Employment Agreement',
 		taskIds: [1, 2, 3],
 	};
@@ -35,6 +35,65 @@ describe('todo-list', () => {
 
 	afterEach(async (): Promise<void> => {
 		await db.todoList.deleteMany();
+	});
+
+	describe('getLists', () => {
+		it('return lists', async () => {
+			const [{ id }, { id: id2 }] = await Promise.all([
+				db.todoList.create({
+					data: mockTodoList,
+				}),
+				db.todoList.create({
+					data: mockTodoList,
+				}),
+			]);
+
+			const response = await request.get(`/api/todo-lists`);
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual([
+				expect.objectContaining({ ...mockTodoList, id }),
+				expect.objectContaining({ ...mockTodoList, id: id2 }),
+			]);
+		});
+
+		it('return lists with projection', async () => {
+			const name = 'foo';
+			const name2 = 'bar';
+
+			const [{ id }, { id: id2 }] = await Promise.all([
+				db.todoList.create({
+					data: { ...mockTodoList, name },
+				}),
+				db.todoList.create({
+					data: { ...mockTodoList, name: name2 },
+				}),
+			]);
+
+			const response = await request.get(`/api/todo-lists`).query({ include: ['name'] });
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ name, id }),
+					expect.objectContaining({ name: name2, id: id2 }),
+				]),
+			);
+		});
+
+		it('return null', async () => {
+			const response = await request.get(`/api/todo-lists`);
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual([]);
+		});
+
+		it('assert query', async () => {
+			const response = await request.get(`/api/todo-lists?foo=bar`);
+
+			expect(response.status).toBe(400);
+			expect(response.text).toEqual('Query validation error: "foo" is not allowed');
+		});
 	});
 
 	describe('getListById', () => {

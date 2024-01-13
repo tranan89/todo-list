@@ -52,7 +52,27 @@ export const createTask = async (ctx: createTaskContext) => {
 		parsedParams: { listId },
 	} = ctx;
 
-	const { id: taskId } = await db.todoTask.create({ data: parsedRequestBody });
+	const taskId = await db.$transaction(async (tx) => {
+		const { id: taskId } = await tx.todoTask.create({ data: parsedRequestBody });
+
+		const list = await tx.todoList.findUnique({
+			where: { id: listId },
+			select: { taskIds: true },
+		});
+
+		if (!list) throw new Error('todoTask.createTask.listNotFound');
+
+		await tx.todoList.update({
+			where: {
+				id: listId,
+			},
+			data: {
+				taskIds: [taskId, ...list.taskIds],
+			},
+		});
+
+		return taskId;
+	});
 
 	ctx.io.emit({
 		room: getTodoListRoom(listId as number),

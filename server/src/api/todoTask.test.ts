@@ -4,7 +4,7 @@ import TestAgent from 'supertest/lib/agent.js';
 import { type Server } from 'http';
 import createHttpServer from '../createHttpServer.js';
 import db from '../database.js';
-import { TodoTask } from '../types/index.js';
+import { TodoListMock, TodoTaskMock } from '../types/tests.js';
 import * as ioMiddleware from '../middlewares/io.js';
 import { getTodoListRoom, todoTaskUpdatedEvent, todoTaskCreatedEvent } from './constants/socket.js';
 
@@ -13,7 +13,11 @@ describe('todo-task', () => {
 	let request: TestAgent<Test>;
 	let ioSpies: { emit: jest.SpyInstance; joinRoom: jest.SpyInstance; leaveRoom: jest.SpyInstance };
 	let listId: number;
-	const mockTodoTask: TodoTask = {
+	const mockTodoList: TodoListMock = {
+		name: 'Shopping List',
+		taskIds: [99],
+	};
+	const mockTodoTask: TodoTaskMock = {
 		name: 'Employment Agreement',
 		description: 'HR',
 	};
@@ -30,10 +34,7 @@ describe('todo-task', () => {
 	beforeEach(async () => {
 		await db.todoTask.deleteMany();
 		({ id: listId } = await db.todoList.create({
-			data: {
-				name: 'Shopping List',
-				taskIds: [],
-			},
+			data: mockTodoList,
 		}));
 
 		ioSpies = { emit: jest.fn(), joinRoom: jest.fn(), leaveRoom: jest.fn() };
@@ -94,19 +95,35 @@ describe('todo-task', () => {
 			name: 'Employment Agreement',
 		};
 
-		it('create task', async () => {
+		it('create task and update list', async () => {
 			const response = await request.post(`/api/todo-lists/${listId}/tasks`).send(mockTodoTask);
 			const { taskId } = response.body.data;
 
-			const data = await db.todoTask.findFirst();
+			const task = await db.todoTask.findFirst();
+			const updatedList = await db.todoList.findFirst();
 
 			expect(response.status).toBe(200);
-			expect(data).toEqual(expect.objectContaining({ ...mockTodoTask, id: taskId }));
+			expect(task).toEqual(expect.objectContaining({ ...mockTodoTask, id: taskId }));
+			expect(updatedList).toEqual(
+				expect.objectContaining({ ...mockTodoList, taskIds: [taskId, ...mockTodoList.taskIds] }),
+			);
 			expect(ioSpies.emit).toHaveBeenCalledWith({
 				room: getTodoListRoom(listId),
 				event: todoTaskCreatedEvent,
 				data: { listId, taskId },
 			});
+		});
+
+		it('abort transaction if list update fails', async () => {
+			const response = await request.post(`/api/todo-lists/7542/tasks`).send(mockTodoTask);
+
+			const task = await db.todoTask.findFirst();
+			const list = await db.todoList.findFirst();
+
+			expect(response.status).toBe(500);
+			expect(task).toEqual(null);
+			expect(list).toEqual(expect.objectContaining(mockTodoList));
+			expect(ioSpies.emit).not.toHaveBeenCalled();
 		});
 
 		describe('assert body', () => {
