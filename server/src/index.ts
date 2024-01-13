@@ -7,6 +7,8 @@ const httpServer = createHttpServer();
 const controller: AbortController = new AbortController();
 const name = 'assignment';
 
+db.$connect();
+
 httpServer.listen(
 	{
 		host: 'localhost',
