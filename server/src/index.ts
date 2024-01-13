@@ -1,3 +1,4 @@
+import envConfigs from './loadEnv.js';
 import createHttpServer from './createHttpServer.js';
 import db from './database.js';
 

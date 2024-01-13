@@ -8,7 +8,7 @@ const env = (process.env.NODE_ENV as 'production' | 'development' | undefined) ?
 const isProd = env === 'production';
 
 const config: Configuration = {
-	devtool: isProd ? 'source-map' : false,
+	devtool: 'source-map',
 	mode: env,
 	entry: './src/bootstrap.tsx',
 	resolve: {

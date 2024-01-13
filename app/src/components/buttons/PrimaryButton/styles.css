@@ -1,0 +1,9 @@
+.root {
+	font-size: 1rem;
+	padding: var(--spacingXS) var(--spacingS);
+	border: 1px solid rgb(0,0,0,0.35);
+	border-radius: 0.375rem;
+	background-color: #2c9051;
+	color: #fff;
+	font-weight: bold;
+}

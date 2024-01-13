@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { TodoTask } from '../types';
+import PrimaryButton from '../../buttons/PrimaryButton/PrimaryButton';
+import TextInput from '../../inputs/TextInput/TextInput';
 import styles from './styles.css';
 
 interface Props {
@@ -25,13 +27,12 @@ const AddTask = (props: Props) => {
 
 	return (
 		<form className={styles.root} onSubmit={addTask}>
-			<input
-				type="text"
+			<TextInput
 				placeholder="Task Name"
 				value={taskName}
 				onChange={(e) => setTaskName(e.target.value)}
 			/>
-			<button type="submit">Add Task</button>
+			<PrimaryButton type="submit">Add Task</PrimaryButton>
 		</form>
 	);
 };

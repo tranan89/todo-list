@@ -9,4 +9,5 @@ module.exports = {
   roots: ['<rootDir>'],
   testEnvironment: 'node',
   testMatch: ['<rootDir>/src/**/*.test.ts'],
+  setupFiles: ['./src/loadEnv.ts'],
 };
