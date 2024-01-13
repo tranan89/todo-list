@@ -8,9 +8,10 @@ const router = new Router({
 });
 
 router
+	.get('/', todoList.getLists)
+	.post('/', todoList.createList)
 	.get('/:listId', todoList.getListById)
 	.patch('/:listId', todoList.updateListById)
-	.post('/', todoList.createList)
 	.post('/:listId/join-room', todoList.joinListRoom)
 
 	.get('/:listId/tasks/:taskId', todoTask.getTaskById)

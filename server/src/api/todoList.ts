@@ -4,6 +4,21 @@ import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
 import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
+export const getLists = async (ctx: Context) => {
+	ctx.validate({
+		query: Joi.object().keys({
+			include: Joi.array().items(Joi.string()).single(),
+		}),
+	});
+	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
+
+	const data = await db.todoList.findMany({
+		select,
+	});
+
+	ctx.body = { data };
+};
+
 export const getListById = async (ctx: Context) => {
 	ctx.validate({
 		params: Joi.object()

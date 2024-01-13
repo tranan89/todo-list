@@ -3,6 +3,7 @@ import { TodoTask } from '../types';
 import styles from './styles.css';
 
 interface Props {
+	selectedListId: number;
 	onTaskSelected: (task: TodoTask) => void;
 	taskList: TodoTask[];
 	selectedTask?: TodoTask;

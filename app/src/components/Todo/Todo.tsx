@@ -7,8 +7,7 @@ import AddTask from './AddTask/AddTask';
 import Task from './Task/Task';
 
 const Todo = () => {
-	const [lists, setLists] = useState<TodoList[]>();
-	const [selectedList, setSelectedList] = useState<TodoList>();
+	const [selectedListId, setSelectedListId] = useState<number>();
 
 	const [taskList, setTaskList] = useState<TodoTask[]>([]);
 	const [selectedTask, setSelectedTask] = useState<TodoTask>();
@@ -36,12 +35,17 @@ const Todo = () => {
 	return (
 		<div className={styles.root}>
 			<div className={styles.listPanel}>
-				<Lists />
+				<Lists setSelectedListId={setSelectedListId} selectedListId={selectedListId} />
 			</div>
-			{selectedList && (
+			{selectedListId && (
 				<div className={styles.tasksPanel}>
 					<AddTask onTaskCreated={addTask} />
-					<Tasks taskList={taskList} selectedTask={selectedTask} onTaskSelected={setSelectedTask} />
+					<Tasks
+						selectedListId={selectedListId}
+						taskList={taskList}
+						selectedTask={selectedTask}
+						onTaskSelected={setSelectedTask}
+					/>
 				</div>
 			)}
 			{selectedTask && (
