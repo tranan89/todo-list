@@ -15,11 +15,6 @@ const validate = (ctx: Context) => (schemas: Schemas) => {
 	if (bodySchema) {
 		const { error, value } = bodySchema.validate(body);
 
-		console.info({
-			error,
-			value,
-		});
-
 		if (error) {
 			errorMsg += `Body validation error: ${error.message} `;
 		} else {
@@ -68,5 +63,15 @@ const validateMiddleware = () => (ctx: Context, next: Next) => {
 	});
 	return next();
 };
+
+export interface ValidateContext {
+	parsedParams: {
+		listId?: number;
+		taskId?: number;
+	};
+	parsedQuery: {
+		include?: string[];
+	};
+}
 
 export default validateMiddleware;

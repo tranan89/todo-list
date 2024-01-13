@@ -1,23 +1,24 @@
 import { expect, it, describe, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import supertest, { Test } from 'supertest';
 import TestAgent from 'supertest/lib/agent.js';
-import { IncomingMessage, ServerResponse } from 'http';
+import { type Server } from 'http';
 import createHttpServer from '../createHttpServer.js';
 import db from '../database.js';
 import { TodoList } from '../types/index.js';
-
-type RequestListener = (req: IncomingMessage, res: ServerResponse) => void | Promise<void>;
+import * as ioMiddleware from '../middlewares/io.js';
+import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
 describe('todo-list', () => {
-	let app: RequestListener;
+	let app: Server;
 	let request: TestAgent<Test>;
+	let ioSpies: { emit: jest.SpyInstance; joinRoom: jest.SpyInstance; leaveRoom: jest.SpyInstance };
 	const mockTodoList: TodoList = {
 		name: 'Employment Agreement',
 		taskIds: [1, 2, 3],
 	};
 
 	beforeAll((): void => {
-		app = createHttpServer().callback();
+		app = createHttpServer();
 		request = supertest(app);
 	});
 
@@ -27,6 +28,9 @@ describe('todo-list', () => {
 
 	beforeEach(async (): Promise<void> => {
 		await db.todoList.deleteMany();
+
+		ioSpies = { emit: jest.fn(), joinRoom: jest.fn(), leaveRoom: jest.fn() };
+		jest.spyOn(ioMiddleware, 'io').mockReturnValue(ioSpies as any);
 	});
 
 	afterEach(async (): Promise<void> => {
@@ -46,8 +50,6 @@ describe('todo-list', () => {
 			const { id } = await db.todoList.create({ data: mockTodoList });
 			const response = await request.get(`/api/todo-lists/${id}`).query({ include: ['name'] });
 
-			console.info(response);
-
 			expect(response.status).toBe(200);
 			expect(response.body.data).toEqual({
 				name: mockTodoList.name,
@@ -66,7 +68,7 @@ describe('todo-list', () => {
 			const response = await request.get(`/api/todo-lists/test`);
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual('Params validation error: "id" must be a number');
+			expect(response.text).toEqual('Params validation error: "listId" must be a number');
 		});
 
 		it('assert query', async () => {
@@ -88,7 +90,9 @@ describe('todo-list', () => {
 			const data = await db.todoList.findFirst();
 
 			expect(response.status).toBe(200);
-			expect(data).toEqual(expect.objectContaining({ ...mockTodoList, id: response.body.data.id }));
+			expect(data).toEqual(
+				expect.objectContaining({ ...mockTodoList, id: response.body.data.listId }),
+			);
 		});
 
 		describe('assert body', () => {
@@ -102,20 +106,25 @@ describe('todo-list', () => {
 	});
 
 	describe('updateList', () => {
-		it('update list name and description', async () => {
-			const { id } = await db.todoList.create({ data: mockTodoList });
+		it('update list name and taskIds', async () => {
+			const { id: listId } = await db.todoList.create({ data: mockTodoList });
 
 			const updatedList = {
 				name: 'Grocery Shopping',
 				taskIds: [4, 3, 2, 1],
 			};
 
-			const response = await request.patch(`/api/todo-lists/${id}`).send(updatedList);
+			const response = await request.patch(`/api/todo-lists/${listId}`).send(updatedList);
 
 			const data = await db.todoList.findFirst();
 
-			expect(response.status).toBe(200);
-			expect(data).toEqual(expect.objectContaining({ ...updatedList, id }));
+			expect(response.status).toBe(204);
+			expect(data).toEqual(expect.objectContaining({ ...updatedList, id: listId }));
+			expect(ioSpies.emit).toHaveBeenCalledWith({
+				room: getTodoListRoom(listId),
+				event: todoListUpdatedEvent,
+				data: { listId },
+			});
 		});
 
 		it(`assert at least 1 payload key`, async () => {
@@ -123,6 +132,28 @@ describe('todo-list', () => {
 
 			expect(response.status).toBe(400);
 			expect(response.text).toEqual(`Body validation error: "value" must have at least 1 key`);
+		});
+	});
+
+	describe('joinListRoom', () => {
+		it('update list name and taskIds', async () => {
+			const listId = 123;
+			const socketId = '123';
+
+			const response = await request.post(`/api/todo-lists/${listId}/join-room`).send({ socketId });
+
+			expect(response.status).toBe(204);
+			expect(ioSpies.joinRoom).toHaveBeenCalledWith({
+				socketId,
+				room: getTodoListRoom(listId),
+			});
+		});
+
+		it(`assert socketId payload`, async () => {
+			const response = await request.post(`/api/todo-lists/12/join-room`).send({});
+
+			expect(response.status).toBe(400);
+			expect(response.text).toEqual(`Body validation error: "socketId" is required`);
 		});
 	});
 });

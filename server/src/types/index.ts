@@ -1,4 +1,6 @@
 import type { DefaultContext } from 'koa';
+import type { ValidateContext } from '../middlewares/validate.js';
+import type { IoContext } from '../middlewares/io.js';
 
 export type TodoTask = {
 	name: string;
@@ -10,13 +12,4 @@ export type TodoList = {
 	taskIds?: number[];
 };
 
-interface ValidateContext {
-	parsedParams: {
-		id?: number;
-	};
-	parsedQuery: {
-		include?: string[];
-	};
-}
-
-export interface Context extends DefaultContext, ValidateContext {}
+export interface Context extends DefaultContext, ValidateContext, IoContext {}

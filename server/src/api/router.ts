@@ -4,16 +4,17 @@ import * as todoTask from './todoTask.js';
 import * as todoList from './todoList.js';
 
 const router = new Router({
-	prefix: '/api',
+	prefix: '/api/todo-lists',
 });
 
 router
-	.get('/todo-tasks/:id', todoTask.getTaskById)
-	.patch('/todo-tasks/:id', todoTask.updateTaskById)
-	.post('/todo-tasks', todoTask.createTask)
+	.get('/:listId', todoList.getListById)
+	.patch('/:listId', todoList.updateListById)
+	.post('/', todoList.createList)
+	.post('/:listId/join-room', todoList.joinListRoom)
 
-	.get('/todo-lists/:id', todoList.getListById)
-	.patch('/todo-lists/:id', todoList.updateListById)
-	.post('/todo-lists', todoList.createList);
+	.get('/:listId/tasks/:taskId', todoTask.getTaskById)
+	.patch('/:listId/tasks/:taskId', todoTask.updateTaskById)
+	.post('/:listId/tasks', todoTask.createTask);
 
 export default router;

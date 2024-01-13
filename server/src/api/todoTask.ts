@@ -2,12 +2,14 @@ import Joi from 'joi';
 import db from '../database.js';
 import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
+import { getTodoListRoom, todoTaskCreatedEvent, todoTaskUpdatedEvent } from './constants/socket.js';
 
-export const getTaskById = async (ctx: Context): Promise<void> => {
+export const getTaskById = async (ctx: Context) => {
 	ctx.validate({
 		params: Joi.object()
 			.keys({
-				id: Joi.number().required(),
+				listId: Joi.number().required(),
+				taskId: Joi.number().required(),
 			})
 			.required(),
 		query: Joi.object().keys({
@@ -18,7 +20,7 @@ export const getTaskById = async (ctx: Context): Promise<void> => {
 
 	const data = await db.todoTask.findUnique({
 		where: {
-			id: ctx.parsedParams.id,
+			id: ctx.parsedParams.taskId,
 		},
 		select,
 	});
@@ -31,8 +33,13 @@ interface createTaskContext extends Context {
 		name: string;
 	};
 }
-export const createTask = async (ctx: createTaskContext): Promise<void> => {
+export const createTask = async (ctx: createTaskContext) => {
 	ctx.validate({
+		params: Joi.object()
+			.keys({
+				listId: Joi.number().required(),
+			})
+			.required(),
 		body: Joi.object()
 			.keys({
 				name: Joi.string().required(),
@@ -40,11 +47,20 @@ export const createTask = async (ctx: createTaskContext): Promise<void> => {
 			.unknown()
 			.required(),
 	});
-	const { parsedRequestBody } = ctx;
+	const {
+		parsedRequestBody,
+		parsedParams: { listId },
+	} = ctx;
 
-	const { id } = await db.todoTask.create({ data: parsedRequestBody });
+	const { id: taskId } = await db.todoTask.create({ data: parsedRequestBody });
 
-	ctx.body = { data: { id } };
+	ctx.io.emit({
+		room: getTodoListRoom(listId as number),
+		event: todoTaskCreatedEvent,
+		data: { listId, taskId },
+	});
+
+	ctx.body = { data: { taskId } };
 };
 
 interface updateTaskContext extends Context {
@@ -53,11 +69,12 @@ interface updateTaskContext extends Context {
 		description?: string;
 	};
 }
-export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
+export const updateTaskById = async (ctx: updateTaskContext) => {
 	ctx.validate({
 		params: Joi.object()
 			.keys({
-				id: Joi.number().required(),
+				listId: Joi.number().required(),
+				taskId: Joi.number().required(),
 			})
 			.required(),
 		body: Joi.object()
@@ -70,15 +87,21 @@ export const updateTaskById = async (ctx: updateTaskContext): Promise<void> => {
 	});
 	const {
 		parsedRequestBody,
-		parsedParams: { id },
+		parsedParams: { taskId, listId },
 	} = ctx;
 
 	await db.todoTask.update({
 		where: {
-			id,
+			id: taskId,
 		},
 		data: parsedRequestBody,
 	});
 
-	ctx.body = { data: { id } };
+	ctx.io.emit({
+		room: getTodoListRoom(listId as number),
+		event: todoTaskUpdatedEvent,
+		data: { listId, taskId },
+	});
+
+	ctx.status = 204;
 };

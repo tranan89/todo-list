@@ -1,10 +1,8 @@
-import Koa from 'koa';
-import type { Context } from './types/index.js';
 import createHttpServer from './createHttpServer.js';
 import db from './database.js';
 
 const port: string | 3000 = process.env.PORT || 3000;
-const httpServer: Koa<Context> = createHttpServer();
+const httpServer = createHttpServer();
 const controller: AbortController = new AbortController();
 const name = 'assignment';
 
