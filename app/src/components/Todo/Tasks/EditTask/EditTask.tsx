@@ -41,6 +41,14 @@ const EditTask = (props: Props) => {
 		}
 	}, [name, description, editing]);
 
+	useEffect(() => {
+		setName(task.name);
+	}, [task.name]);
+
+	useEffect(() => {
+		setDescription(task.description || '');
+	}, [task.description]);
+
 	return (
 		<div className={styles.root}>
 			<input
@@ -55,6 +63,7 @@ const EditTask = (props: Props) => {
 			<textarea
 				className={styles.description}
 				value={description}
+				placeholder="Description"
 				onChange={(e) => {
 					setEditing(true);
 					setDescription(e.target.value);

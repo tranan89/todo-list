@@ -6,11 +6,12 @@ type SocketType = {
 	onEvent: (event: string, key: string, cb: Function) => void;
 	socket: ReturnType<typeof io>;
 };
+type SocketListener = Record<string, Function>;
 
 const getSocket = (): SocketType => {
-	const onConnectListeners = {} as Record<string, Function>;
-	const onDisconnectListeners = {} as Record<string, Function>;
-	const onEventListeners = {} as Record<string, Function>;
+	const onConnectListeners = {} as SocketListener;
+	const onDisconnectListeners = {} as SocketListener;
+	const onEventListeners = {} as Record<string, SocketListener>;
 
 	const socket = io('http://localhost:3000');
 
@@ -60,11 +61,14 @@ const getSocket = (): SocketType => {
 	};
 
 	const onEvent = (event: string, key: string, cb: Function) => {
-		onEventListeners[key] = cb;
+		if (!onEventListeners[event]) {
+			onEventListeners[event] = {};
+		}
+		onEventListeners[event][key] = cb;
 
 		if (!socket.hasListeners(event)) {
 			socket.on(event, (data) => {
-				Object.values(onEventListeners).forEach((onEventCallback) => {
+				Object.values(onEventListeners[event]).forEach((onEventCallback) => {
 					onEventCallback(data);
 				});
 			});

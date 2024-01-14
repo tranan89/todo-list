@@ -12,6 +12,16 @@
 	&:not(:last-child) {
 		margin-bottom: var(--spacingXXS);
 	}
+
+	svg {
+		width: 24px;
+		height: 24px;
+		fill: rgba(0, 0, 0, 0.4);
+
+		&:hover {
+			fill: rgba(0, 0, 0, 0.8);
+		}
+	}
 }
 
 .selectedList {
@@ -19,5 +29,28 @@
 
 	&, &:hover {
 		background-color: #8AA7FF;
+	}
+}
+
+.editForm {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+
+	.buttonGroup {
+		display: flex;
+		flex: 1;
+		margin-top: var(--spacingXS);
+
+		button {
+			flex: 1;
+
+			&:first-child {
+				margin-right: var(--spacingXXS);
+			}
+			&:last-child {
+				margin-left: var(--spacingXXS);
+			}
+		}
 	}
 }

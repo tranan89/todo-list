@@ -19,7 +19,7 @@ const Tasks = (props: Props) => {
 
 	const [roomJoined, setRoomJoined] = useState<boolean>(false);
 	const [taskRecord, setTaskRecord] = useState<Record<TodoTask['id'], TodoTask>>({});
-	const [selectedTask, setSelectedTask] = useState<TodoTask>();
+	const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>();
 
 	const { apiClient } = useApiClient();
 	const { socket, onConnect, onDisconnect, onEvent } = useSocket();
@@ -103,19 +103,23 @@ const Tasks = (props: Props) => {
 						if (!task) {
 							return null;
 						}
-						const className = task.id === selectedTask?.id ? styles.selectedTask : styles.task;
+						const className = task.id === selectedTaskId ? styles.selectedTask : styles.task;
 
 						return (
-							<li className={className} onClick={() => setSelectedTask(task)} key={task.id}>
+							<li className={className} onClick={() => setSelectedTaskId(task.id)} key={task.id}>
 								<p>{task.name}</p>
 							</li>
 						);
 					})}
 				</ul>
 			</div>
-			{selectedTask && (
+			{selectedTaskId && (
 				<div className={styles.editTaskPanel}>
-					<EditTask key={selectedTask.id} task={selectedTask} listId={selectedList.id} />
+					<EditTask
+						key={selectedTaskId}
+						task={taskRecord[selectedTaskId]}
+						listId={selectedList.id}
+					/>
 				</div>
 			)}
 		</>
