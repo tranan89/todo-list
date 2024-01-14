@@ -1,18 +1,22 @@
-.root {
-	margin-top: var(--spacingM);
-}
-
 .tasksPanel {
 	max-width: 400px;
+	flex-shrink: 0;
 	padding-right: var(--spacingL);
 	padding-left: var(--spacingL);
 	border-right: 1px solid var(--borderColor);
+
+	ul {
+		margin-top: var(--spacingM);
+	}
 }
 
 .editTaskPanel {
 	flex: 1;
 	max-width: 600px;
+	min-width: 300px;
+	flex-shrink: 0;
 	padding-left: var(--spacingL);
+	padding-right: var(--spacingL);
 }
 
 .task {

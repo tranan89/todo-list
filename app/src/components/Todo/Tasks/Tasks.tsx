@@ -96,7 +96,7 @@ const Tasks = (props: Props) => {
 		<>
 			<div className={styles.tasksPanel}>
 				<AddTask listId={selectedList.id} />
-				<ul className={styles.root}>
+				<ul>
 					{selectedList.taskIds.map((taskId: TodoTask['id']) => {
 						const task = taskRecord[taskId];
 

@@ -47,7 +47,7 @@ const Lists = (props: Props) => {
 	return (
 		<div className={styles.listPanel}>
 			<AddList onListCreated={addList} />
-			<ul className={styles.root}>
+			<ul>
 				{lists.map((list: TodoList) => {
 					return (
 						<List

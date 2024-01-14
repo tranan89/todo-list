@@ -6,6 +6,7 @@
 	background-color: #2c9051;
 	color: #fff;
 	font-weight: bold;
+	flex-shrink: 0;
 
 	&:not([disabled]):hover {
 		cursor: pointer;
