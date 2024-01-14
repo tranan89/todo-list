@@ -1,4 +1,5 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import indexOf from 'lodash/indexOf';
 import { TodoTask, TodoList } from '../types';
 import styles from './styles.css';
 import AddTask from './AddTask/AddTask';
@@ -21,9 +22,17 @@ const Tasks = (props: Props) => {
 	const [roomJoined, setRoomJoined] = useState<boolean>(false);
 	const [taskRecord, setTaskRecord] = useState<Record<TodoTask['id'], TodoTask>>({});
 	const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>();
+	const [taskIds, setTaskIds] = useState<TodoList['taskIds']>(props.selectedList.taskIds);
 
 	const { apiClient } = useApiClient();
 	const { socket, onConnect, onDisconnect, onEvent } = useSocket();
+
+	const dragItem = useRef('');
+	const dragOverItem = useRef('');
+
+	useEffect(() => {
+		setTaskIds(props.selectedList.taskIds);
+	}, [selectedList.taskIds]);
 
 	const getTasks = useCallback(async () => {
 		setTaskRecord({});
@@ -81,6 +90,27 @@ const Tasks = (props: Props) => {
 		[setTaskRecord, taskRecord],
 	);
 
+	const updateTaskOrderInList = useCallback(
+		async (taskIds: TodoList['taskIds']) => {
+			await apiClient.patch(`/api/todo-lists/${selectedList.id}`, { taskIds });
+		},
+		[selectedList.id],
+	);
+
+	const updateTaskOrder = useCallback(async () => {
+		const taskIds = [...selectedList.taskIds];
+
+		const dragIndex = indexOf(taskIds, Number(dragItem.current));
+		const dragOverIndex = indexOf(taskIds, Number(dragOverItem.current));
+
+		taskIds.splice(dragIndex, 1);
+		taskIds.splice(dragOverIndex, 0, Number(dragItem.current));
+
+		setTaskIds(taskIds);
+
+		await updateTaskOrderInList(taskIds);
+	}, [selectedList.taskIds, dragItem, dragOverItem, setTaskIds, updateTaskOrderInList]);
+
 	useEffect(() => {
 		onConnect(`list.${selectedList.id}.tasks`, () => {
 			joinSocketRoom();
@@ -131,7 +161,7 @@ const Tasks = (props: Props) => {
 			<div className={styles.tasksPanel}>
 				<AddTask listId={selectedList.id} />
 				<ul>
-					{selectedList.taskIds.map((taskId: TodoTask['id']) => {
+					{taskIds.map((taskId: TodoTask['id']) => {
 						const task = taskRecord[taskId];
 
 						if (!task) {
@@ -140,7 +170,20 @@ const Tasks = (props: Props) => {
 						const className = task.id === selectedTaskId ? styles.selectedTask : styles.task;
 
 						return (
-							<li className={className} onClick={() => setSelectedTaskId(task.id)} key={task.id}>
+							<li
+								id={task.id.toString()}
+								className={className}
+								onClick={() => setSelectedTaskId(task.id)}
+								key={task.id}
+								draggable
+								onDragStart={(e: any) => {
+									dragItem.current = e.target.id;
+								}}
+								onDragOver={(e) => {
+									dragOverItem.current = e.currentTarget.id;
+								}}
+								onDragEnd={updateTaskOrder}
+							>
 								<p>{task.name}</p>
 								<DeleteIcon
 									onClick={async (e) => {
