@@ -20,6 +20,7 @@ model TodoList {
 
 model TodoTask {
   id        Int      @id @default(autoincrement())
+  listId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String   @db.VarChar(255)

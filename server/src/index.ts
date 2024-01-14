@@ -1,9 +1,9 @@
 import envConfigs from './loadEnv.js';
-import createHttpServer from './createHttpServer.js';
+import createServer from './createServer.js';
 import db from './database.js';
 
 const port: string | 3000 = process.env.PORT || 3000;
-const httpServer = createHttpServer();
+const { httpServer, ioServer } = createServer();
 const controller: AbortController = new AbortController();
 const name = 'assignment';
 
@@ -24,8 +24,12 @@ httpServer.listen(
 	process.on(signal, async (): Promise<void> => {
 		try {
 			console.info(`Received ${signal}, begin graceful shutdown`);
+			ioServer.close();
+			console.info('Closed socket server');
 			controller.abort();
+			console.info('Closed http server');
 			await db.$disconnect();
+			console.info('Disconnected db');
 		} catch (error) {
 			if (error instanceof Error) {
 				error.message = `graceful shutdown error: ${error.message}`;

@@ -1,9 +1,9 @@
 import type { DefaultContext } from 'koa';
-import type { ValidateContext } from '../middlewares/validate.js';
 import type { IoContext } from '../middlewares/io.js';
 
 export type TodoTask = {
 	id: number;
+	listId: number;
 	name: string;
 	description?: string;
 	createdAt: Date;
@@ -18,4 +18,4 @@ export type TodoList = {
 	updatedAt: Date;
 };
 
-export interface Context extends DefaultContext, ValidateContext, IoContext {}
+export interface Context extends DefaultContext, IoContext {}

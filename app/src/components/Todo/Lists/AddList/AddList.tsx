@@ -2,8 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { TodoList } from '../../types';
 import PrimaryButton from '../../../buttons/PrimaryButton/PrimaryButton';
 import TextInput from '../../../inputs/TextInput/TextInput';
-import styles from './styles.css';
 import { useApiClient } from '../../../../contexts/apiClient';
+import styles from './styles.css';
 
 interface Props {
 	onListCreated: ({ listId }: { listId: TodoList['id'] }) => void;

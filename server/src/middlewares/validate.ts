@@ -64,14 +64,4 @@ const validateMiddleware = () => (ctx: Context, next: Next) => {
 	return next();
 };
 
-export interface ValidateContext {
-	parsedParams: {
-		listId?: number;
-		taskId?: number;
-	};
-	parsedQuery: {
-		include?: string[];
-	};
-}
-
 export default validateMiddleware;

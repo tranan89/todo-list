@@ -1,15 +1,13 @@
 import { expect, it, describe, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import supertest, { Test } from 'supertest';
 import TestAgent from 'supertest/lib/agent.js';
-import { type Server } from 'http';
-import createHttpServer from '../createHttpServer.js';
+import createServer from '../createServer.js';
 import db from '../database.js';
 import { TodoListMock } from '../types/tests.js';
 import * as ioMiddleware from '../middlewares/io.js';
 import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
 describe('todo-list', () => {
-	let app: Server;
 	let request: TestAgent<Test>;
 	let ioSpies: { emit: jest.SpyInstance; joinRoom: jest.SpyInstance; leaveRoom: jest.SpyInstance };
 	const mockTodoList: TodoListMock = {
@@ -18,8 +16,8 @@ describe('todo-list', () => {
 	};
 
 	beforeAll((): void => {
-		app = createHttpServer();
-		request = supertest(app);
+		const { httpServer } = createServer();
+		request = supertest(httpServer);
 	});
 
 	afterAll(async (): Promise<void> => {

@@ -1,15 +1,13 @@
 import { expect, it, describe, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import supertest, { Test } from 'supertest';
 import TestAgent from 'supertest/lib/agent.js';
-import { type Server } from 'http';
-import createHttpServer from '../createHttpServer.js';
+import createServer from '../createServer.js';
 import db from '../database.js';
 import { TodoListMock, TodoTaskMock } from '../types/tests.js';
 import * as ioMiddleware from '../middlewares/io.js';
 import { getTodoListRoom, todoTaskUpdatedEvent, todoTaskCreatedEvent } from './constants/socket.js';
 
 describe('todo-task', () => {
-	let app: Server;
 	let request: TestAgent<Test>;
 	let ioSpies: { emit: jest.SpyInstance; joinRoom: jest.SpyInstance; leaveRoom: jest.SpyInstance };
 	let listId: number;
@@ -18,13 +16,14 @@ describe('todo-task', () => {
 		taskIds: [99],
 	};
 	const mockTodoTask: TodoTaskMock = {
+		listId: -1,
 		name: 'Employment Agreement',
 		description: 'HR',
 	};
 
 	beforeAll(() => {
-		app = createHttpServer();
-		request = supertest(app);
+		const { httpServer } = createServer();
+		request = supertest(httpServer);
 	});
 
 	afterAll(async () => {
@@ -36,6 +35,7 @@ describe('todo-task', () => {
 		({ id: listId } = await db.todoList.create({
 			data: mockTodoList,
 		}));
+		mockTodoTask.listId = listId;
 
 		ioSpies = { emit: jest.fn(), joinRoom: jest.fn(), leaveRoom: jest.fn() };
 		jest.spyOn(ioMiddleware, 'io').mockReturnValue(ioSpies as any);
@@ -44,6 +44,63 @@ describe('todo-task', () => {
 	afterEach(async () => {
 		await db.todoTask.deleteMany();
 		await db.todoList.deleteMany();
+	});
+
+	describe('getTasksByListId', () => {
+		it('return tasks', async () => {
+			const { id } = await db.todoTask.create({ data: mockTodoTask });
+			const { id: id2 } = await db.todoTask.create({ data: mockTodoTask });
+
+			const response = await request.get(`/api/todo-lists/${listId}/tasks`);
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ ...mockTodoTask, id }),
+					expect.objectContaining({ ...mockTodoTask, id: id2 }),
+				]),
+			);
+		});
+
+		it('return tasks with projection', async () => {
+			const { id } = await db.todoTask.create({ data: mockTodoTask });
+			const { id: id2 } = await db.todoTask.create({ data: mockTodoTask });
+
+			const response = await request
+				.get(`/api/todo-lists/${listId}/tasks`)
+				.query({ include: ['name'] });
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ name: mockTodoTask.name, id }),
+					expect.objectContaining({ name: mockTodoTask.name, id: id2 }),
+				]),
+			);
+		});
+
+		it('return empty array', async () => {
+			await db.todoTask.create({ data: mockTodoTask });
+
+			const response = await request.get(`/api/todo-lists/123/tasks`);
+
+			expect(response.status).toBe(200);
+			expect(response.body.data).toEqual([]);
+		});
+
+		it('assert params', async () => {
+			const response = await request.get(`/api/todo-lists/test/tasks`);
+
+			expect(response.status).toBe(400);
+			expect(response.text).toEqual('Params validation error: "listId" must be a number');
+		});
+
+		it('assert query', async () => {
+			const response = await request.get(`/api/todo-lists/${listId}/tasks?foo=bar`);
+
+			expect(response.status).toBe(400);
+			expect(response.text).toEqual('Query validation error: "foo" is not allowed');
+		});
 	});
 
 	describe('getTaskById', () => {
@@ -163,7 +220,7 @@ describe('todo-task', () => {
 		});
 
 		describe('assert body', () => {
-			Object.keys(mockTodoTask).forEach((key: string) => {
+			['name', 'description'].forEach((key: string) => {
 				it(`assert ${key}`, async () => {
 					const response = await request
 						.patch(`/api/todo-lists/${listId}/tasks/12`)

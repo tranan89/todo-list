@@ -1,21 +1,4 @@
-.root {
-	margin-top: var(--spacingM);
-}
-
-.tasksPanel {
-	max-width: 400px;
-	padding-right: var(--spacingL);
-	padding-left: var(--spacingL);
-	border-right: 1px solid var(--borderColor);
-}
-
-.editTaskPanel {
-	flex: 1;
-	max-width: 600px;
-	padding-left: var(--spacingL);
-}
-
-.task {
+.list {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -31,8 +14,8 @@
 	}
 }
 
-.selectedTask {
-	composes: task;
+.selectedList {
+	composes: list;
 
 	&, &:hover {
 		background-color: #8AA7FF;

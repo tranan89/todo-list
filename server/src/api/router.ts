@@ -14,6 +14,7 @@ router
 	.patch('/:listId', todoList.updateListById)
 	.post('/:listId/join-room', todoList.joinListRoom)
 
+	.get('/:listId/tasks', todoTask.getTasksByListId)
 	.get('/:listId/tasks/:taskId', todoTask.getTaskById)
 	.patch('/:listId/tasks/:taskId', todoTask.updateTaskById)
 	.post('/:listId/tasks', todoTask.createTask);

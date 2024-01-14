@@ -3,14 +3,15 @@ import { useApiClient } from '../../../contexts/apiClient';
 import styles from './styles.css';
 import { TodoList } from '../types';
 import AddList from './AddList/AddList';
+import List from './List/List';
 
 interface Props {
-	setSelectedListId: Dispatch<SetStateAction<number | undefined>>;
-	selectedListId?: number;
+	setSelectedList: Dispatch<SetStateAction<TodoList | undefined>>;
+	selectedList?: TodoList;
 }
 
 const Lists = (props: Props) => {
-	const { setSelectedListId, selectedListId } = props;
+	const { setSelectedList, selectedList } = props;
 
 	const [lists, setLists] = useState<TodoList[]>([]);
 
@@ -19,14 +20,24 @@ const Lists = (props: Props) => {
 	const getLists = useCallback(async () => {
 		const { data } = (await apiClient.get('/api/todo-lists')).data;
 		setLists(data);
-	}, [apiClient]);
+	}, [apiClient, setLists]);
 
 	const addList = useCallback(
 		async ({ listId }: { listId: TodoList['id'] }) => {
 			const { data } = (await apiClient.get(`/api/todo-lists/${listId}`)).data;
 			setLists([data, ...lists]);
 		},
-		[apiClient, lists],
+		[apiClient, lists, setLists],
+	);
+
+	const updateList = useCallback(
+		(list: TodoList) => {
+			if (selectedList?.id === list.id) {
+				setSelectedList(list);
+			}
+			setLists([list, ...lists.filter((l) => l.id !== list.id)]);
+		},
+		[lists, selectedList?.id, setLists, setSelectedList],
 	);
 
 	useEffect(() => {
@@ -34,20 +45,22 @@ const Lists = (props: Props) => {
 	}, []);
 
 	return (
-		<>
+		<div className={styles.listPanel}>
 			<AddList onListCreated={addList} />
 			<ul className={styles.root}>
 				{lists.map((list: TodoList) => {
-					const className = list.id === selectedListId ? styles.selectedList : styles.list;
-
 					return (
-						<li className={className} onClick={() => setSelectedListId(list.id)} key={list.id}>
-							<p>{list.name}</p>
-						</li>
+						<List
+							{...list}
+							selectedListId={selectedList?.id}
+							key={list.id}
+							onClick={() => setSelectedList(list)}
+							updateList={(list) => updateList(list)}
+						/>
 					);
 				})}
 			</ul>
-		</>
+		</div>
 	);
 };
 

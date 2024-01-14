@@ -1,28 +1,30 @@
 import React, { useState, useCallback } from 'react';
-import { TodoTask } from '../types';
-import PrimaryButton from '../../buttons/PrimaryButton/PrimaryButton';
-import TextInput from '../../inputs/TextInput/TextInput';
+import { TodoTask, TodoList } from '../../types';
+import PrimaryButton from '../../../buttons/PrimaryButton/PrimaryButton';
+import TextInput from '../../../inputs/TextInput/TextInput';
+import { useApiClient } from '../../../../contexts/apiClient';
 import styles from './styles.css';
 
 interface Props {
-	onTaskCreated: (taskName: TodoTask) => void;
+	listId: TodoList['id'];
 }
 
 const AddTask = (props: Props) => {
-	const { onTaskCreated } = props;
+	const { listId } = props;
 
 	const [taskName, setTaskName] = useState<string>('');
 
+	const { apiClient } = useApiClient();
+
 	const addTask = useCallback(
-		(e: React.FormEvent<HTMLFormElement>) => {
+		async (e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
 
-			const task = { name: taskName, id: Math.round(Math.random() * 999999) + 1 };
+			await apiClient.post(`/api/todo-lists/${listId}/tasks`, { name: taskName });
 
-			onTaskCreated(task);
 			setTaskName('');
 		},
-		[taskName],
+		[taskName, listId, apiClient],
 	);
 
 	return (

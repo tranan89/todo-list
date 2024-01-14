@@ -2,26 +2,8 @@
 	margin-top: var(--spacingM);
 }
 
-.list {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: var(--spacingXS) var(--spacingS);
-	border-radius: 0.375rem;
-	cursor: pointer;
-
-	&:hover {
-		background-color: rgb(0,0,0,0.06);
-	}
-	&:not(:last-child) {
-		margin-bottom: var(--spacingXXS);
-	}
-}
-
-.selectedList {
-	composes: list;
-
-	&, &:hover {
-		background-color: #8AA7FF;
-	}
+.listPanel {
+	max-width: 400px;
+	padding-right: var(--spacingL);
+	border-right: 1px solid var(--borderColor);
 }

@@ -4,7 +4,12 @@ import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
 import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
-export const getLists = async (ctx: Context) => {
+interface getListsContext extends Context {
+	parsedQuery: {
+		include?: string[];
+	};
+}
+export const getLists = async (ctx: getListsContext) => {
 	ctx.validate({
 		query: Joi.object().keys({
 			include: Joi.array().items(Joi.string()).single(),
@@ -14,11 +19,22 @@ export const getLists = async (ctx: Context) => {
 
 	const data = await db.todoList.findMany({
 		select,
+		orderBy: {
+			updatedAt: 'desc',
+		},
 	});
 
 	ctx.body = { data };
 };
 
+interface getListsContext extends Context {
+	parsedParams: {
+		listId: number;
+	};
+	parsedQuery: {
+		include?: string[];
+	};
+}
 export const getListById = async (ctx: Context) => {
 	ctx.validate({
 		params: Joi.object()
@@ -64,6 +80,9 @@ export const createList = async (ctx: createListContext) => {
 };
 
 interface updateListContext extends Context {
+	parsedParams: {
+		listId: number;
+	};
 	parsedRequestBody: {
 		name?: string;
 		taskIds?: number[];
@@ -107,6 +126,9 @@ export const updateListById = async (ctx: updateListContext) => {
 };
 
 interface joinListRoomContext extends Context {
+	parsedParams: {
+		listId: number;
+	};
 	parsedRequestBody: {
 		socketId: string;
 	};

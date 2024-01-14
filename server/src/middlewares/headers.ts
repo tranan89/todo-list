@@ -6,7 +6,7 @@ const headersMiddleware = () => (ctx: Context, next: Next) => {
 		'Access-Control-Allow-Headers',
 		'Origin, X-Requested-With, Content-Type, Accept, Authorization',
 	);
-	ctx.set('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, HEAD, OPTIONS');
+	ctx.set('Access-Control-Allow-Methods', 'GET, PUT, POST, PATCH, DELETE, HEAD, OPTIONS');
 
 	return next();
 };
