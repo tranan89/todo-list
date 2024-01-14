@@ -97,6 +97,7 @@ const List = (props: Props) => {
 					/>
 					<div className={styles.buttonGroup}>
 						<DefaultButton
+							type="button"
 							onClick={(e) => {
 								e.preventDefault();
 								e.stopPropagation();
