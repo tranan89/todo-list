@@ -17,6 +17,7 @@ router
 	.get('/:listId/tasks', todoTask.getTasksByListId)
 	.get('/:listId/tasks/:taskId', todoTask.getTaskById)
 	.patch('/:listId/tasks/:taskId', todoTask.updateTaskById)
+	.delete('/:listId/tasks/:taskId', todoTask.deleteTaskById)
 	.post('/:listId/tasks', todoTask.createTask);
 
 export default router;

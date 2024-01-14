@@ -3,6 +3,7 @@ import { TodoTask, TodoList } from '../types';
 import styles from './styles.css';
 import AddTask from './AddTask/AddTask';
 import EditTask from './EditTask/EditTask';
+import DeleteIcon from '../../../components/icons/DeleteIcon';
 import { useApiClient } from '../../../contexts/apiClient';
 import { useSocket } from '../../../contexts/socket';
 
@@ -52,6 +53,13 @@ const Tasks = (props: Props) => {
 		[apiClient],
 	);
 
+	const deleteTask = useCallback(
+		async (taskId: TodoTask['id']) => {
+			await apiClient.delete(`/api/todo-lists/${selectedList.id}/tasks/${taskId}`);
+		},
+		[apiClient],
+	);
+
 	useEffect(() => {
 		getTasks();
 	}, []);
@@ -64,6 +72,14 @@ const Tasks = (props: Props) => {
 
 		setRoomJoined(true);
 	}, [apiClient, socket, roomJoined, setRoomJoined, selectedList.id]);
+
+	const removeTask = useCallback(
+		(taskId: TodoTask['id']) => {
+			delete taskRecord[taskId];
+			setTaskRecord({ ...taskRecord });
+		},
+		[setTaskRecord, taskRecord],
+	);
 
 	useEffect(() => {
 		onConnect(`list.${selectedList.id}.tasks`, () => {
@@ -83,14 +99,32 @@ const Tasks = (props: Props) => {
 		);
 		onEvent(
 			'todoTaskUpdated',
-			`list.${selectedList.id}.tasks.todoTaskCreated`,
+			`list.${selectedList.id}.tasks.todoTaskUpdated`,
 			({ listId, taskId }: SocketEvent) => {
 				if (listId === selectedList.id) {
 					getTask(taskId);
 				}
 			},
 		);
-	}, [socket, onConnect, onDisconnect, onEvent, joinSocketRoom, getTask, selectedList.id]);
+		onEvent(
+			'todoTaskDeleted',
+			`list.${selectedList.id}.tasks.todoTaskDeleted`,
+			({ listId, taskId }: SocketEvent) => {
+				if (listId === selectedList.id) {
+					removeTask(taskId);
+				}
+			},
+		);
+	}, [
+		socket,
+		onConnect,
+		onDisconnect,
+		onEvent,
+		joinSocketRoom,
+		getTask,
+		selectedList.id,
+		removeTask,
+	]);
 
 	return (
 		<>
@@ -108,6 +142,16 @@ const Tasks = (props: Props) => {
 						return (
 							<li className={className} onClick={() => setSelectedTaskId(task.id)} key={task.id}>
 								<p>{task.name}</p>
+								<DeleteIcon
+									onClick={async (e) => {
+										e.stopPropagation();
+
+										if (selectedTaskId === task.id) {
+											setSelectedTaskId(undefined);
+										}
+										await deleteTask(task.id);
+									}}
+								/>
 							</li>
 						);
 					})}

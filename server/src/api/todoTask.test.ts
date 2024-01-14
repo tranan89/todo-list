@@ -5,7 +5,12 @@ import createServer from '../createServer.js';
 import db from '../database.js';
 import { TodoListMock, TodoTaskMock } from '../types/tests.js';
 import * as ioMiddleware from '../middlewares/io.js';
-import { getTodoListRoom, todoTaskUpdatedEvent, todoTaskCreatedEvent } from './constants/socket.js';
+import {
+	getTodoListRoom,
+	todoTaskUpdatedEvent,
+	todoTaskCreatedEvent,
+	todoTaskDeletedEvent,
+} from './constants/socket.js';
 
 describe('todo-task', () => {
 	let request: TestAgent<Test>;
@@ -220,16 +225,55 @@ describe('todo-task', () => {
 		});
 
 		describe('assert body', () => {
-			['name', 'description'].forEach((key: string) => {
-				it(`assert ${key}`, async () => {
-					const response = await request
-						.patch(`/api/todo-lists/${listId}/tasks/12`)
-						.send({ ...mockTodoTask, [key]: undefined });
+			it(`assert name`, async () => {
+				const response = await request
+					.patch(`/api/todo-lists/${listId}/tasks/12`)
+					.send({ ...mockTodoTask, name: undefined });
 
-					expect(response.status).toBe(400);
-					expect(response.text).toEqual(`Body validation error: "${key}" is required`);
-				});
+				expect(response.status).toBe(400);
+				expect(response.text).toEqual(`Body validation error: "name" is required`);
 			});
+
+			it(`assert description`, async () => {
+				const response = await request
+					.patch(`/api/todo-lists/${listId}/tasks/12`)
+					.send({ ...mockTodoTask, description: 123 });
+
+				expect(response.status).toBe(400);
+				expect(response.text).toEqual(`Body validation error: "description" must be a string`);
+			});
+		});
+	});
+
+	describe('deleteTaskById', () => {
+		it('delete task', async () => {
+			const { id } = await db.todoTask.create({ data: mockTodoTask });
+
+			const response = await request.delete(`/api/todo-lists/${listId}/tasks/${id}`);
+
+			const data = await db.todoTask.findFirst();
+
+			expect(response.status).toBe(204);
+			expect(data).toEqual(null);
+			expect(ioSpies.emit).toHaveBeenCalledWith({
+				room: getTodoListRoom(listId),
+				event: todoTaskDeletedEvent,
+				data: { listId, taskId: id },
+			});
+		});
+
+		it('abort transaction if list update fails', async () => {
+			const { id } = await db.todoTask.create({ data: mockTodoTask });
+
+			const response = await request.delete(`/api/todo-lists/123/tasks/${id}`);
+
+			const task = await db.todoTask.findFirst();
+			const list = await db.todoList.findFirst();
+
+			expect(response.status).toBe(500);
+			expect(task).not.toEqual(null);
+			expect(list).toEqual(expect.objectContaining(mockTodoList));
+			expect(ioSpies.emit).not.toHaveBeenCalled();
 		});
 	});
 });

@@ -2,7 +2,12 @@ import Joi from 'joi';
 import db from '../database.js';
 import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
-import { getTodoListRoom, todoTaskCreatedEvent, todoTaskUpdatedEvent } from './constants/socket.js';
+import {
+	getTodoListRoom,
+	todoTaskCreatedEvent,
+	todoTaskDeletedEvent,
+	todoTaskUpdatedEvent,
+} from './constants/socket.js';
 
 interface getTasksByListIdContext extends Context {
 	parsedParams: {
@@ -172,6 +177,58 @@ export const updateTaskById = async (ctx: updateTaskContext) => {
 	ctx.io.emit({
 		room: getTodoListRoom(listId as number),
 		event: todoTaskUpdatedEvent,
+		data: { listId, taskId },
+	});
+
+	ctx.status = 204;
+};
+
+interface deleteTaskContext extends Context {
+	parsedParams: {
+		listId: number;
+		taskId: number;
+	};
+}
+export const deleteTaskById = async (ctx: deleteTaskContext) => {
+	ctx.validate({
+		params: Joi.object()
+			.keys({
+				listId: Joi.number().required(),
+				taskId: Joi.number().required(),
+			})
+			.required(),
+	});
+	const {
+		parsedParams: { taskId, listId },
+	} = ctx;
+
+	await db.$transaction(async (tx) => {
+		await tx.todoTask.delete({
+			where: {
+				id: taskId,
+			},
+		});
+
+		const list = await tx.todoList.findUnique({
+			where: { id: listId },
+			select: { taskIds: true },
+		});
+
+		if (!list) throw new Error('todoTask.deleteTask.listNotFound');
+
+		await tx.todoList.update({
+			where: {
+				id: listId,
+			},
+			data: {
+				taskIds: list.taskIds.filter((id) => id !== taskId),
+			},
+		});
+	});
+
+	ctx.io.emit({
+		room: getTodoListRoom(listId as number),
+		event: todoTaskDeletedEvent,
 		data: { listId, taskId },
 	});
 
