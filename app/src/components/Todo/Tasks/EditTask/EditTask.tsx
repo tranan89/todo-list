@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import debounce from 'lodash/debounce';
 import { TodoList, TodoTask } from '../../types';
 import { useApiClient } from '../../../../contexts/apiClient';
+import { useSocket } from '../../../../contexts/socket';
 import styles from './styles.css';
 
 interface Props {
@@ -17,6 +18,7 @@ const EditTask = (props: Props) => {
 	const [description, setDescription] = useState(task.description || '');
 
 	const { apiClient } = useApiClient();
+	const { onConnect } = useSocket();
 
 	const debouncedUpdateTask = useCallback(
 		debounce(async ({ apiClient, listId, task, name, description }) => {
@@ -48,6 +50,14 @@ const EditTask = (props: Props) => {
 	useEffect(() => {
 		setDescription(task.description || '');
 	}, [task.description]);
+
+	useEffect(() => {
+		onConnect(`task.${task.id}.edit`, () => {
+			if (editing) {
+				updateTask();
+			}
+		});
+	}, [onConnect, task.id, editing, updateTask]);
 
 	return (
 		<div className={styles.root}>

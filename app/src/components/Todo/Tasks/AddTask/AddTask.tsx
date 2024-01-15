@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { TodoTask, TodoList } from '../../types';
+import { TodoList } from '../../types';
 import PrimaryButton from '../../../buttons/PrimaryButton/PrimaryButton';
 import TextInput from '../../../inputs/TextInput/TextInput';
 import { useApiClient } from '../../../../contexts/apiClient';
