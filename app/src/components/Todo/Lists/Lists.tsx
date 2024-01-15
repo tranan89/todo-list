@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { useApiClient } from '../../../contexts/apiClient';
+import { useSocket } from '../../../contexts/socket';
 import styles from './styles.css';
 import { TodoList } from '../types';
 import AddList from './AddList/AddList';
@@ -16,6 +17,7 @@ const Lists = (props: Props) => {
 	const [lists, setLists] = useState<TodoList[]>([]);
 
 	const { apiClient } = useApiClient();
+	const { onConnect } = useSocket();
 
 	const getLists = useCallback(async () => {
 		const { data } = (await apiClient.get('/api/todo-lists')).data;
@@ -43,6 +45,12 @@ const Lists = (props: Props) => {
 	useEffect(() => {
 		getLists();
 	}, []);
+
+	useEffect(() => {
+		onConnect('lists', async () => {
+			await getLists();
+		});
+	}, [onConnect, getLists]);
 
 	return (
 		<div className={styles.listPanel}>

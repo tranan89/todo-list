@@ -52,9 +52,9 @@ const EditTask = (props: Props) => {
 	}, [task.description]);
 
 	useEffect(() => {
-		onConnect(`task.${task.id}.edit`, () => {
+		onConnect(`task.${task.id}.edit`, async () => {
 			if (editing) {
-				updateTask();
+				await updateTask();
 			}
 		});
 	}, [onConnect, task.id, editing, updateTask]);

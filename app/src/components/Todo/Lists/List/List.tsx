@@ -46,20 +46,20 @@ const List = (props: Props) => {
 	}, [apiClient, id, updateList]);
 
 	useEffect(() => {
-		onConnect(`list.${id}`, () => {
-			joinSocketRoom();
+		onConnect(`list.${id}`, async () => {
+			await joinSocketRoom();
 		});
 		onDisconnect(`list.${id}`, () => {
 			setRoomJoined(false);
 		});
-		onEvent('todoTaskCreated', `list.${id}.todoTaskCreated`, ({ listId }: SocketEvent) => {
+		onEvent('todoTaskCreated', `list.${id}.todoTaskCreated`, async ({ listId }: SocketEvent) => {
 			if (listId === id) {
-				getUpdatedList();
+				await getUpdatedList();
 			}
 		});
-		onEvent('todoListUpdated', `list.${id}.todoListUpdated`, ({ listId }: SocketEvent) => {
+		onEvent('todoListUpdated', `list.${id}.todoListUpdated`, async ({ listId }: SocketEvent) => {
 			if (listId === id) {
-				getUpdatedList();
+				await getUpdatedList();
 			}
 		});
 	}, [socket, onConnect, onDisconnect, onEvent, joinSocketRoom, id, getUpdatedList]);

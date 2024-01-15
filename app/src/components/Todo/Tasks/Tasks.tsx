@@ -25,15 +25,18 @@ const Tasks = (props: Props) => {
 	const [taskIds, setTaskIds] = useState<TodoList['taskIds']>(props.selectedList.taskIds);
 	const [draggedTaskId, setDraggedTaskId] = useState<TodoTask['id'] | undefined>();
 	const [editing, setEditing] = useState<boolean>(false);
+	const [disconnected, setDisconnected] = useState<boolean>(false);
 
 	const { apiClient } = useApiClient();
-	const { socket, onEvent, onConnect } = useSocket();
+	const { socket, onEvent, onConnect, onDisconnect } = useSocket();
 
 	const dragOverItem = useRef('');
 
 	useEffect(() => {
-		setTaskIds(props.selectedList.taskIds);
-	}, [selectedList.taskIds]);
+		if (!editing) {
+			setTaskIds(props.selectedList.taskIds);
+		}
+	}, [selectedList.taskIds, editing]);
 
 	const getTasks = useCallback(async () => {
 		setTaskRecord({});
@@ -82,27 +85,30 @@ const Tasks = (props: Props) => {
 		[setTaskRecord, taskRecord],
 	);
 
-	const updateTaskOrderInList = useCallback(async () => {
-		await apiClient.patch(`/api/todo-lists/${selectedList.id}`, { taskIds });
-		setEditing(false);
-	}, [selectedList.id, setEditing, taskIds]);
+	const updateTaskOrderInList = useCallback(
+		async (taskIds: TodoTask['id'][]) => {
+			await apiClient.patch(`/api/todo-lists/${selectedList.id}`, { taskIds });
+			setEditing(false);
+		},
+		[selectedList.id, setEditing, taskIds],
+	);
 
 	const updateTaskOrder = useCallback(async () => {
 		if (!draggedTaskId) return;
 
-		const taskIds = [...selectedList.taskIds];
+		const updatedTaskIds = [...taskIds];
 
-		const dragIndex = indexOf(taskIds, draggedTaskId);
-		const dragOverIndex = indexOf(taskIds, Number(dragOverItem.current));
+		const dragIndex = indexOf(updatedTaskIds, draggedTaskId);
+		const dragOverIndex = indexOf(updatedTaskIds, Number(dragOverItem.current));
 
-		taskIds.splice(dragIndex, 1);
-		taskIds.splice(dragOverIndex, 0, draggedTaskId);
+		updatedTaskIds.splice(dragIndex, 1);
+		updatedTaskIds.splice(dragOverIndex, 0, draggedTaskId);
 
-		setTaskIds(taskIds);
+		setTaskIds(updatedTaskIds);
 		setDraggedTaskId(undefined);
 		setEditing(true);
 
-		await updateTaskOrderInList();
+		await updateTaskOrderInList(updatedTaskIds);
 	}, [
 		selectedList.taskIds,
 		draggedTaskId,
@@ -113,26 +119,33 @@ const Tasks = (props: Props) => {
 	]);
 
 	useEffect(() => {
-		onConnect(`list.${selectedList.id}.tasks`, () => {
+		onConnect(`list.${selectedList.id}.tasks`, async () => {
+			if (!disconnected) return;
+
+			setDisconnected(false);
+
 			if (editing) {
-				updateTaskOrderInList();
+				await Promise.all([updateTaskOrderInList(taskIds), getTasks()]);
 			}
+		});
+		onDisconnect(`list.${selectedList.id}.tasks`, async () => {
+			setDisconnected(true);
 		});
 		onEvent(
 			'todoTaskCreated',
 			`list.${selectedList.id}.tasks.todoTaskCreated`,
-			({ listId, taskId }: SocketEvent) => {
+			async ({ listId, taskId }: SocketEvent) => {
 				if (listId === selectedList.id) {
-					getTask(taskId);
+					await getTask(taskId);
 				}
 			},
 		);
 		onEvent(
 			'todoTaskUpdated',
 			`list.${selectedList.id}.tasks.todoTaskUpdated`,
-			({ listId, taskId }: SocketEvent) => {
+			async ({ listId, taskId }: SocketEvent) => {
 				if (listId === selectedList.id) {
-					getTask(taskId);
+					await getTask(taskId);
 				}
 			},
 		);
@@ -149,11 +162,15 @@ const Tasks = (props: Props) => {
 		socket,
 		onConnect,
 		onEvent,
+		onDisconnect,
+		disconnected,
+		setDisconnected,
 		getTask,
 		selectedList.id,
 		removeTask,
 		editing,
 		updateTaskOrderInList,
+		taskIds,
 	]);
 
 	return (
