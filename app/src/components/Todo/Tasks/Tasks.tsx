@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import indexOf from 'lodash/indexOf';
+import clsx from 'clsx';
 import { TodoTask, TodoList } from '../types';
 import styles from './styles.css';
 import AddTask from './AddTask/AddTask';
@@ -23,11 +24,11 @@ const Tasks = (props: Props) => {
 	const [taskRecord, setTaskRecord] = useState<Record<TodoTask['id'], TodoTask>>({});
 	const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>();
 	const [taskIds, setTaskIds] = useState<TodoList['taskIds']>(props.selectedList.taskIds);
+	const [draggedTaskId, setDraggedTaskId] = useState<TodoTask['id'] | undefined>();
 
 	const { apiClient } = useApiClient();
 	const { socket, onConnect, onDisconnect, onEvent } = useSocket();
 
-	const dragItem = useRef('');
 	const dragOverItem = useRef('');
 
 	useEffect(() => {
@@ -98,18 +99,21 @@ const Tasks = (props: Props) => {
 	);
 
 	const updateTaskOrder = useCallback(async () => {
+		if (!draggedTaskId) return;
+
 		const taskIds = [...selectedList.taskIds];
 
-		const dragIndex = indexOf(taskIds, Number(dragItem.current));
+		const dragIndex = indexOf(taskIds, draggedTaskId);
 		const dragOverIndex = indexOf(taskIds, Number(dragOverItem.current));
 
 		taskIds.splice(dragIndex, 1);
-		taskIds.splice(dragOverIndex, 0, Number(dragItem.current));
+		taskIds.splice(dragOverIndex, 0, draggedTaskId);
 
 		setTaskIds(taskIds);
+		setDraggedTaskId(undefined);
 
 		await updateTaskOrderInList(taskIds);
-	}, [selectedList.taskIds, dragItem, dragOverItem, setTaskIds, updateTaskOrderInList]);
+	}, [selectedList.taskIds, draggedTaskId, dragOverItem, setTaskIds, updateTaskOrderInList]);
 
 	useEffect(() => {
 		onConnect(`list.${selectedList.id}.tasks`, () => {
@@ -167,17 +171,19 @@ const Tasks = (props: Props) => {
 						if (!task) {
 							return null;
 						}
-						const className = task.id === selectedTaskId ? styles.selectedTask : styles.task;
 
 						return (
 							<li
 								id={task.id.toString()}
-								className={className}
+								className={clsx({
+									[styles.task]: true,
+									[styles.selectedTask]: task.id === selectedTaskId,
+								})}
 								onClick={() => setSelectedTaskId(task.id)}
 								key={task.id}
 								draggable
-								onDragStart={(e: any) => {
-									dragItem.current = e.target.id;
+								onDragStart={() => {
+									setDraggedTaskId(task.id);
 								}}
 								onDragOver={(e) => {
 									dragOverItem.current = e.currentTarget.id;

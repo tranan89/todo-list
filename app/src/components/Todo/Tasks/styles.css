@@ -7,6 +7,7 @@
 
 	ul {
 		margin-top: var(--spacingM);
+		position: relative;
 	}
 }
 
@@ -34,7 +35,11 @@
 		margin-bottom: var(--spacingXXS);
 	}
 
+	p {
+		padding-right: var(--spacingXS);
+	}
 	svg {
+		flex-shrink: 0;
 		width: 24px;
 		height: 24px;
 		fill: rgba(185,58,19, 0.4);
@@ -46,8 +51,6 @@
 }
 
 .selectedTask {
-	composes: task;
-
 	&, &:hover {
 		background-color: #8AA7FF;
 	}

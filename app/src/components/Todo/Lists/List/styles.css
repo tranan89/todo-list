@@ -13,7 +13,11 @@
 		margin-bottom: var(--spacingXXS);
 	}
 
+	p {
+		padding-right: var(--spacingXS);
+	}
 	svg {
+		flex-shrink: 0;
 		width: 24px;
 		height: 24px;
 		fill: rgba(0, 0, 0, 0.4);
