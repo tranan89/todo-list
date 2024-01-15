@@ -2,6 +2,7 @@ import compose from 'koa-compose';
 import bodyParser from 'koa-body';
 import type { Server } from 'socket.io';
 import logger from './logger.js';
+import error from './error.js';
 import validate from './validate.js';
 import io from './io.js';
 import requestLogging from './requestLogging.js';
@@ -11,6 +12,7 @@ const middlewares = ({ ioServer }: { ioServer: Server }) =>
 	compose([
 		headers(),
 		logger(),
+		error(),
 		// TODO: add useful headers to ctx.state, error handler, metrics etc
 		requestLogging(),
 		bodyParser(),
