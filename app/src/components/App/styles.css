@@ -1,7 +1,11 @@
 .root {
-	padding: var(--spacingL) var(--spacingXL);
+	height: 100%;
+}
+
+.content {
 	display: flex;
 	flex-direction: column;
+	padding: var(--spacingL) var(--spacingXL);
 
 	@media (width < 720px) {
 		padding: var(--spacingM);

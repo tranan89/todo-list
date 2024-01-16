@@ -45,9 +45,6 @@ body {
 :global #root {
 	height: 100%;
 }
-main {
-	height: 100%;
-}
 
 ul {
 	list-style: none;

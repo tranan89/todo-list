@@ -1,0 +1,48 @@
+.root {
+	display: flex;
+	justify-content: center;
+	border-botttom: 1px solid rgb(0,0,0,0.35);
+	box-shadow: 0 8px 20px -10px rgba(50, 50, 93, 0.25), 0 1px 3px -1px rgba(0, 0, 0, 0.11);
+	padding: var(--spacingS);
+	font-weight: bold;
+	color: #fff;
+
+	animation-duration: 200ms;
+	animation-direction: normal;
+	animation-timing-function: ease-out;
+	animation-fill-mode: forwards;
+
+	opacity: 0;
+	max-height: 0;
+}
+
+.disconnected {
+	background-color: #d74114;
+}
+.connected {
+	background-color: #2c9051;
+}
+
+.show {
+	animation-name: slide-in;
+}
+.hide {
+	animation-name: slide-out;
+}
+
+@keyframes slide-in {
+	0% {
+	}
+	100% {
+		opacity: 1;
+		max-height: 100px;
+	}
+}
+@keyframes slide-out {
+	0% {
+	}
+	100% {
+		opacity: 0;
+		max-height: 0;
+	}
+}
