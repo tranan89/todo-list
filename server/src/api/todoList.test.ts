@@ -90,7 +90,9 @@ describe('todo-list', () => {
 			const response = await request.get(`/api/todo-lists?foo=bar`);
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual('Query validation error: "foo" is not allowed');
+			expect(JSON.parse(response.text).error.title).toEqual(
+				'Query validation error: "foo" is not allowed',
+			);
 		});
 	});
 
@@ -125,14 +127,19 @@ describe('todo-list', () => {
 			const response = await request.get(`/api/todo-lists/test`);
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual('Params validation error: "listId" must be a number');
+
+			expect(JSON.parse(response.text).error.title).toEqual(
+				'Params validation error: "listId" must be a number',
+			);
 		});
 
 		it('assert query', async () => {
 			const response = await request.get(`/api/todo-lists/123?foo=bar`);
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual('Query validation error: "foo" is not allowed');
+			expect(JSON.parse(response.text).error.title).toEqual(
+				'Query validation error: "foo" is not allowed',
+			);
 		});
 	});
 
@@ -157,7 +164,9 @@ describe('todo-list', () => {
 				const response = await request.post(`/api/todo-lists`).send({ ['name']: undefined });
 
 				expect(response.status).toBe(400);
-				expect(response.text).toEqual(`Body validation error: "name" is required`);
+				expect(JSON.parse(response.text).error.title).toEqual(
+					`Body validation error: "name" is required`,
+				);
 			});
 		});
 	});
@@ -188,7 +197,9 @@ describe('todo-list', () => {
 			const response = await request.patch(`/api/todo-lists/12`).send({});
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual(`Body validation error: "value" must have at least 1 key`);
+			expect(JSON.parse(response.text).error.title).toEqual(
+				`Body validation error: "value" must have at least 1 key`,
+			);
 		});
 	});
 
@@ -210,7 +221,9 @@ describe('todo-list', () => {
 			const response = await request.post(`/api/todo-lists/12/join-room`).send({});
 
 			expect(response.status).toBe(400);
-			expect(response.text).toEqual(`Body validation error: "socketId" is required`);
+			expect(JSON.parse(response.text).error.title).toEqual(
+				`Body validation error: "socketId" is required`,
+			);
 		});
 	});
 });
