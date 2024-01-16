@@ -3,6 +3,7 @@ import debounce from 'lodash/debounce';
 import { TodoList, TodoTask } from '../../types';
 import { useApiClient } from '../../../../contexts/apiClient';
 import { useSocket } from '../../../../contexts/socket';
+import SuccessToast from '../../../toasts/SuccessToast/SuccessToast';
 import styles from './styles.css';
 
 interface Props {
@@ -16,6 +17,7 @@ const EditTask = (props: Props) => {
 	const [editing, setEditing] = useState(false);
 	const [name, setName] = useState(task.name);
 	const [description, setDescription] = useState(task.description || '');
+	const [success, setSuccess] = useState<boolean>(false);
 
 	const { apiClient } = useApiClient();
 	const { onConnect } = useSocket();
@@ -28,6 +30,7 @@ const EditTask = (props: Props) => {
 			});
 
 			setEditing(false);
+			setSuccess(true);
 		}, 500),
 		[],
 	);
@@ -79,6 +82,9 @@ const EditTask = (props: Props) => {
 					setDescription(e.target.value);
 				}}
 			/>
+			{success && (
+				<SuccessToast onExit={() => setSuccess(false)}>Task "{name}" updated</SuccessToast>
+			)}
 		</div>
 	);
 };

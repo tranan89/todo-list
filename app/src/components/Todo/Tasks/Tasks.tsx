@@ -9,6 +9,7 @@ import DeleteIcon from '../../../components/icons/DeleteIcon';
 import DefaultButton from '../../../components/buttons/DefaultButton/DefaultButton';
 import { useApiClient } from '../../../contexts/apiClient';
 import { useSocket } from '../../../contexts/socket';
+import SuccessToast from '../../toasts/SuccessToast/SuccessToast';
 
 interface Props {
 	selectedList: TodoList;
@@ -29,6 +30,7 @@ const Tasks = (props: Props) => {
 	const [draggedOverTaskId, setDraggedOverTaskId] = useState<TodoTask['id'] | undefined>();
 	const [editing, setEditing] = useState<boolean>(false);
 	const [disconnected, setDisconnected] = useState<boolean>(false);
+	const [updateOrderSuccess, setUpdateOrderSuccess] = useState<boolean>(false);
 
 	const dragIndex = draggedTaskId ? indexOf(taskIds, draggedTaskId) : -1;
 	const dragOverIndex = draggedOverTaskId ? indexOf(taskIds, draggedOverTaskId) : -1;
@@ -92,7 +94,9 @@ const Tasks = (props: Props) => {
 	const updateTaskOrderInList = useCallback(
 		async (taskIds: TodoTask['id'][]) => {
 			await apiClient.patch(`/api/todo-lists/${selectedList.id}`, { taskIds });
+
 			setEditing(false);
+			setUpdateOrderSuccess(true);
 		},
 		[selectedList.id, setEditing, taskIds],
 	);
@@ -249,6 +253,9 @@ const Tasks = (props: Props) => {
 						listId={selectedList.id}
 					/>
 				</div>
+			)}
+			{updateOrderSuccess && (
+				<SuccessToast onExit={() => setUpdateOrderSuccess(false)}>Tasks order updated</SuccessToast>
 			)}
 		</>
 	);
