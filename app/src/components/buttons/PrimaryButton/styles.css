@@ -1,5 +1,4 @@
 .root {
-	composes: baseButton from '../styles.css';
 	background-color: #2c9051;
 
 	&:not([disabled]):hover {

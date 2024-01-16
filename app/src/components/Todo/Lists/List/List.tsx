@@ -7,6 +7,7 @@ import PrimaryButton from '../../../../components/buttons/PrimaryButton/PrimaryB
 import DefaultButton from '../../../../components/buttons/DefaultButton/DefaultButton';
 import TextInput from '../../../../components/inputs/TextInput/TextInput';
 import styles from './styles.css';
+import ErrorToast from '../../../toasts/ErrorToast/ErrorToast';
 
 interface Props extends TodoList {
 	onClick: () => void;
@@ -23,6 +24,7 @@ const List = (props: Props) => {
 	const [roomJoined, setRoomJoined] = useState<boolean>(false);
 	const [edit, setEdit] = useState<boolean>(false);
 	const [name, setName] = useState<string>(props.name);
+	const [error, setError] = useState<boolean>(false);
 
 	const { apiClient } = useApiClient();
 	const { socket, onConnect, onDisconnect, onEvent } = useSocket();
@@ -65,7 +67,14 @@ const List = (props: Props) => {
 	}, [socket, onConnect, onDisconnect, onEvent, joinSocketRoom, id, getUpdatedList]);
 
 	const updateListName = useCallback(async () => {
-		await apiClient.patch(`/api/todo-lists/${id}`, { name });
+		try {
+			setError(false);
+			await apiClient.patch(`/api/todo-lists/${id}`, { name });
+			setEdit(false);
+		} catch (error) {
+			console.error(error);
+			setError(true);
+		}
 	}, [apiClient, id, name]);
 
 	const className = id === selectedListId ? styles.selectedList : styles.list;
@@ -86,7 +95,6 @@ const List = (props: Props) => {
 						e.stopPropagation();
 						e.preventDefault();
 						await updateListName();
-						setEdit(false);
 					}}
 				>
 					<TextInput
@@ -108,6 +116,9 @@ const List = (props: Props) => {
 						</DefaultButton>
 						<PrimaryButton type="submit">Save</PrimaryButton>
 					</div>
+					{error && (
+						<ErrorToast onExit={() => setError(false)}>Failed to update list name</ErrorToast>
+					)}
 				</form>
 			) : (
 				<>

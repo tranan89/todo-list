@@ -1,20 +1,19 @@
 import React from 'react';
 import clsx from 'clsx';
 import styles from './styles.css';
-import BaseButton from '../BaseButton';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	children: React.ReactNode;
 }
 
-const PrimaryButton = (props: Props) => {
+const BaseButton = (props: Props) => {
 	const { children, className, ...rest } = props;
 
 	return (
-		<BaseButton className={clsx(styles.root, className)} {...rest}>
+		<button className={clsx(styles.root, className)} {...rest}>
 			{children}
-		</BaseButton>
+		</button>
 	);
 };
 
-export default PrimaryButton;
+export default BaseButton;
