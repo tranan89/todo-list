@@ -4,8 +4,10 @@ import { useSocket } from '../../contexts/socket';
 import styles from './styles.css';
 
 const ConnectionListener = () => {
-	const [disconnected, setDisconnected] = useState<boolean>(false);
-	const [show, setShow] = useState<boolean>(false);
+	const [disconnected, setDisconnected] = useState<boolean>(true);
+	const [show, setShow] = useState<boolean>(true);
+	const [slideOut, setSlideOut] = useState<boolean>(false);
+	const [initialConnect, setInitialConnect] = useState<boolean>(true);
 
 	const { onConnect, onDisconnect } = useSocket();
 
@@ -13,33 +15,45 @@ const ConnectionListener = () => {
 		onConnect('connectionListener', () => {
 			setDisconnected(false);
 
-			setTimeout(() => {
+			if (initialConnect) {
 				setShow(false);
+				return;
+			}
+			setTimeout(() => {
+				setSlideOut(true);
+
+				setTimeout(() => {
+					setShow(false);
+					setSlideOut(false);
+				}, 500);
 			}, 3000);
 		});
 		onDisconnect('connectionListener', () => {
 			setDisconnected(true);
 			setShow(true);
 		});
-	}, [onConnect, onDisconnect, setDisconnected]);
+	}, [onConnect, onDisconnect, setDisconnected, setSlideOut, setShow, initialConnect]);
 
 	useEffect(() => {
 		setTimeout(() => {
-			setDisconnected(true);
-			setShow(true);
+			// Show banner if socket hasn't connected within 3s
+			setInitialConnect(false);
 		}, 3000);
 	}, []);
 
+	if (!show || initialConnect) {
+		return null;
+	}
 	if (disconnected) {
 		return (
-			<div className={clsx(styles.root, styles.disconnected, show ? styles.show : styles.hide)}>
-				Disconnected
+			<div className={clsx(styles.root, styles.disconnected, styles.slideIn)}>
+				<p>Disconnected</p>
 			</div>
 		);
 	}
 	return (
-		<div className={clsx(styles.root, styles.connected, show ? styles.show : styles.hide)}>
-			Connected
+		<div className={clsx(styles.root, styles.connected, slideOut && styles.slideOut)}>
+			<p>Connected</p>
 		</div>
 	);
 };

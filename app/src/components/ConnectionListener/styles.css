@@ -3,7 +3,6 @@
 	justify-content: center;
 	border-botttom: 1px solid rgb(0,0,0,0.35);
 	box-shadow: 0 8px 20px -10px rgba(50, 50, 93, 0.25), 0 1px 3px -1px rgba(0, 0, 0, 0.11);
-	padding: var(--spacingS);
 	font-weight: bold;
 	color: #fff;
 
@@ -12,8 +11,9 @@
 	animation-timing-function: ease-out;
 	animation-fill-mode: forwards;
 
-	opacity: 0;
-	max-height: 0;
+	p {
+		padding: var(--spacingS);
+	}
 }
 
 .disconnected {
@@ -23,15 +23,17 @@
 	background-color: #2c9051;
 }
 
-.show {
+.slideIn {
 	animation-name: slide-in;
 }
-.hide {
+.slideOut {
 	animation-name: slide-out;
 }
 
 @keyframes slide-in {
 	0% {
+		opacity: 0;
+		max-height: 0px;
 	}
 	100% {
 		opacity: 1;
@@ -40,6 +42,8 @@
 }
 @keyframes slide-out {
 	0% {
+		opacity: 1;
+		max-height: 100px;
 	}
 	100% {
 		opacity: 0;
