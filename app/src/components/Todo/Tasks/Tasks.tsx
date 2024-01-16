@@ -242,18 +242,20 @@ const Tasks = (props: Props) => {
 						})}
 				</ul>
 			</div>
-			{selectedTaskId && (
-				<div className={styles.editTaskPanel}>
-					<div className={styles.backToTasksButton}>
-						<DefaultButton onClick={() => setSelectedTaskId(undefined)}>Back</DefaultButton>
-					</div>
-					<EditTask
-						key={selectedTaskId}
-						task={taskRecord[selectedTaskId]}
-						listId={selectedList.id}
-					/>
-				</div>
-			)}
+			<div className={clsx(styles.editTaskPanel, selectedTaskId && styles.editTaskPanelActive)}>
+				{selectedTaskId && (
+					<>
+						<div className={styles.backToTasksButton}>
+							<DefaultButton onClick={() => setSelectedTaskId(undefined)}>Back</DefaultButton>
+						</div>
+						<EditTask
+							key={selectedTaskId}
+							task={taskRecord[selectedTaskId]}
+							listId={selectedList.id}
+						/>
+					</>
+				)}
+			</div>
 			{updateOrderSuccess && (
 				<SuccessToast onExit={() => setUpdateOrderSuccess(false)}>Tasks order updated</SuccessToast>
 			)}
