@@ -55,3 +55,9 @@
 		background-color: #8AA7FF;
 	}
 }
+
+.insertTask {
+	padding: var(--spacingXS) var(--spacingM);
+	font-style: italic;
+	font-size: 0.875rem;
+}

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import indexOf from 'lodash/indexOf';
 import clsx from 'clsx';
 import { TodoTask, TodoList } from '../types';
@@ -24,13 +24,15 @@ const Tasks = (props: Props) => {
 	const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>();
 	const [taskIds, setTaskIds] = useState<TodoList['taskIds']>(props.selectedList.taskIds);
 	const [draggedTaskId, setDraggedTaskId] = useState<TodoTask['id'] | undefined>();
+	const [draggedOverTaskId, setDraggedOverTaskId] = useState<TodoTask['id'] | undefined>();
 	const [editing, setEditing] = useState<boolean>(false);
 	const [disconnected, setDisconnected] = useState<boolean>(false);
 
+	const dragIndex = draggedTaskId ? indexOf(taskIds, draggedTaskId) : -1;
+	const dragOverIndex = draggedOverTaskId ? indexOf(taskIds, draggedOverTaskId) : -1;
+
 	const { apiClient } = useApiClient();
 	const { socket, onEvent, onConnect, onDisconnect } = useSocket();
-
-	const dragOverItem = useRef('');
 
 	useEffect(() => {
 		if (!editing) {
@@ -98,24 +100,24 @@ const Tasks = (props: Props) => {
 
 		const updatedTaskIds = [...taskIds];
 
-		const dragIndex = indexOf(updatedTaskIds, draggedTaskId);
-		const dragOverIndex = indexOf(updatedTaskIds, Number(dragOverItem.current));
-
 		updatedTaskIds.splice(dragIndex, 1);
 		updatedTaskIds.splice(dragOverIndex, 0, draggedTaskId);
 
 		setTaskIds(updatedTaskIds);
 		setDraggedTaskId(undefined);
+		setDraggedOverTaskId(undefined);
 		setEditing(true);
 
 		await updateTaskOrderInList(updatedTaskIds);
 	}, [
 		selectedList.taskIds,
 		draggedTaskId,
-		dragOverItem,
+		draggedOverTaskId,
 		setTaskIds,
 		updateTaskOrderInList,
 		setEditing,
+		dragIndex,
+		dragOverIndex,
 	]);
 
 	useEffect(() => {
@@ -184,37 +186,51 @@ const Tasks = (props: Props) => {
 						if (!task) {
 							return null;
 						}
+						const showInsertTask =
+							draggedOverTaskId !== draggedTaskId && task.id === draggedOverTaskId;
+						const showInsertTaskBefore = showInsertTask && dragOverIndex < dragIndex;
+						const showInsertTaskAfter = showInsertTask && dragOverIndex > dragIndex;
+
+						const insertTaskJsx = showInsertTask && (
+							<li className={styles.insertTask}>
+								<p>Insert here</p>
+							</li>
+						);
 
 						return (
-							<li
-								id={task.id.toString()}
-								className={clsx({
-									[styles.task]: true,
-									[styles.selectedTask]: task.id === selectedTaskId,
-								})}
-								onClick={() => setSelectedTaskId(task.id)}
-								key={task.id}
-								draggable
-								onDragStart={() => {
-									setDraggedTaskId(task.id);
-								}}
-								onDragOver={(e) => {
-									dragOverItem.current = e.currentTarget.id;
-								}}
-								onDragEnd={updateTaskOrder}
-							>
-								<p>{task.name}</p>
-								<DeleteIcon
-									onClick={async (e) => {
-										e.stopPropagation();
-
-										if (selectedTaskId === task.id) {
-											setSelectedTaskId(undefined);
-										}
-										await deleteTask(task.id);
+							<>
+								{showInsertTaskBefore && insertTaskJsx}
+								<li
+									id={task.id.toString()}
+									className={clsx({
+										[styles.task]: true,
+										[styles.selectedTask]: task.id === selectedTaskId,
+									})}
+									onClick={() => setSelectedTaskId(task.id)}
+									key={task.id}
+									draggable
+									onDragStart={() => {
+										setDraggedTaskId(task.id);
 									}}
-								/>
-							</li>
+									onDragOver={(e) => {
+										setDraggedOverTaskId(Number(e.currentTarget.id));
+									}}
+									onDragEnd={updateTaskOrder}
+								>
+									<p>{task.name}</p>
+									<DeleteIcon
+										onClick={async (e) => {
+											e.stopPropagation();
+
+											if (selectedTaskId === task.id) {
+												setSelectedTaskId(undefined);
+											}
+											await deleteTask(task.id);
+										}}
+									/>
+								</li>
+								{showInsertTaskAfter && insertTaskJsx}
+							</>
 						);
 					})}
 				</ul>
