@@ -1,10 +1,21 @@
 .listPanel {
 	display: flex;
 	flex-direction: column;
-	max-width: 400px;
 	flex-shrink: 0;
-	padding-right: var(--spacingL);
-	border-right: 1px solid var(--borderColor);
+
+	@media (width > 720px) {
+		max-width: 360px;
+		padding-right: var(--spacingL);
+		border-right: 1px solid var(--borderColor);
+	}
+	@media (width <= 720px) {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 100;
+	}
 
 	ul {
 		margin-top: var(--spacingM);

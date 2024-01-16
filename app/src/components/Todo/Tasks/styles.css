@@ -1,11 +1,29 @@
 .tasksPanel {
 	display: flex;
 	flex-direction: column;
-	max-width: 400px;
 	flex-shrink: 0;
-	padding-right: var(--spacingL);
-	padding-left: var(--spacingL);
-	border-right: 1px solid var(--borderColor);
+	background-color: #fff;
+
+	@media (width > 720px) {
+		padding-right: var(--spacingL);
+		border-right: 1px solid var(--borderColor);
+	}
+	@media (width < 1200px) {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 200;
+	}
+	@media (width > 720px) and (width < 1200px) {
+		right: 50%;
+	}
+	@media (width >= 1200px) {
+		right: 50%;
+		padding-left: var(--spacingL);
+		max-width: 360px;
+	}
 
 	ul {
 		margin-top: var(--spacingM);
@@ -15,11 +33,40 @@
 
 .editTaskPanel {
 	flex: 1;
-	max-width: 600px;
-	min-width: 300px;
 	flex-shrink: 0;
-	padding-left: var(--spacingL);
-	padding-right: var(--spacingL);
+	background-color: #fff;
+
+	@media (width > 720px)  {
+		padding-left: var(--spacingL);
+		max-width: 500px;
+	}
+	@media (width < 1200px) {
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 300;
+	}
+	@media (width > 720px) and (width < 1200px) {
+		left: 50%;
+	}
+}
+
+.backToListsButton {
+	margin-bottom: var(--spacingL);
+
+	@media (width >= 1200px) {
+		display: none;
+	}
+}
+
+.backToTasksButton {
+	margin-bottom: var(--spacingL);
+
+	@media (width > 720px) {
+		display: none;
+	}
 }
 
 .task {

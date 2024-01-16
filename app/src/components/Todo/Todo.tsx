@@ -10,7 +10,13 @@ const Todo = () => {
 	return (
 		<div className={styles.root}>
 			<Lists setSelectedList={setSelectedList} selectedList={selectedList} />
-			{selectedList && <Tasks selectedList={selectedList} key={selectedList.id} />}
+			{selectedList && (
+				<Tasks
+					selectedList={selectedList}
+					key={selectedList.id}
+					goBack={() => setSelectedList(undefined)}
+				/>
+			)}
 		</div>
 	);
 };

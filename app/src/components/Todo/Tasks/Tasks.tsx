@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, Fragment } from 'react';
 import indexOf from 'lodash/indexOf';
 import clsx from 'clsx';
 import { TodoTask, TodoList } from '../types';
@@ -6,11 +6,13 @@ import styles from './styles.css';
 import AddTask from './AddTask/AddTask';
 import EditTask from './EditTask/EditTask';
 import DeleteIcon from '../../../components/icons/DeleteIcon';
+import DefaultButton from '../../../components/buttons/DefaultButton/DefaultButton';
 import { useApiClient } from '../../../contexts/apiClient';
 import { useSocket } from '../../../contexts/socket';
 
 interface Props {
 	selectedList: TodoList;
+	goBack: () => void;
 }
 interface SocketEvent {
 	listId: TodoList['id'];
@@ -18,7 +20,7 @@ interface SocketEvent {
 }
 
 const Tasks = (props: Props) => {
-	const { selectedList } = props;
+	const { selectedList, goBack } = props;
 
 	const [taskRecord, setTaskRecord] = useState<Record<TodoTask['id'], TodoTask>>({});
 	const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>();
@@ -178,65 +180,69 @@ const Tasks = (props: Props) => {
 	return (
 		<>
 			<div className={styles.tasksPanel}>
+				<div className={styles.backToListsButton}>
+					<DefaultButton onClick={goBack}>Back</DefaultButton>
+				</div>
 				<AddTask listId={selectedList.id} />
 				<ul>
-					{taskIds.map((taskId: TodoTask['id']) => {
-						const task = taskRecord[taskId];
+					{taskIds
+						.filter((taskId: TodoTask['id']) => !!taskRecord[taskId])
+						.map((taskId: TodoTask['id']) => {
+							const task = taskRecord[taskId];
 
-						if (!task) {
-							return null;
-						}
-						const showInsertTask =
-							draggedOverTaskId !== draggedTaskId && task.id === draggedOverTaskId;
-						const showInsertTaskBefore = showInsertTask && dragOverIndex < dragIndex;
-						const showInsertTaskAfter = showInsertTask && dragOverIndex > dragIndex;
+							const showInsertTask =
+								draggedOverTaskId !== draggedTaskId && task.id === draggedOverTaskId;
+							const showInsertTaskBefore = showInsertTask && dragOverIndex < dragIndex;
+							const showInsertTaskAfter = showInsertTask && dragOverIndex > dragIndex;
 
-						const insertTaskJsx = showInsertTask && (
-							<li className={styles.insertTask}>
-								<p>Insert here</p>
-							</li>
-						);
-
-						return (
-							<>
-								{showInsertTaskBefore && insertTaskJsx}
-								<li
-									id={task.id.toString()}
-									className={clsx({
-										[styles.task]: true,
-										[styles.selectedTask]: task.id === selectedTaskId,
-									})}
-									onClick={() => setSelectedTaskId(task.id)}
-									key={task.id}
-									draggable
-									onDragStart={() => {
-										setDraggedTaskId(task.id);
-									}}
-									onDragOver={(e) => {
-										setDraggedOverTaskId(Number(e.currentTarget.id));
-									}}
-									onDragEnd={updateTaskOrder}
-								>
-									<p>{task.name}</p>
-									<DeleteIcon
-										onClick={async (e) => {
-											e.stopPropagation();
-
-											if (selectedTaskId === task.id) {
-												setSelectedTaskId(undefined);
-											}
-											await deleteTask(task.id);
-										}}
-									/>
+							const insertTaskJsx = showInsertTask && (
+								<li className={styles.insertTask}>
+									<p>Insert here</p>
 								</li>
-								{showInsertTaskAfter && insertTaskJsx}
-							</>
-						);
-					})}
+							);
+
+							return (
+								<Fragment key={task.id}>
+									{showInsertTaskBefore && insertTaskJsx}
+									<li
+										id={task.id.toString()}
+										className={clsx({
+											[styles.task]: true,
+											[styles.selectedTask]: task.id === selectedTaskId,
+										})}
+										onClick={() => setSelectedTaskId(task.id)}
+										draggable
+										onDragStart={() => {
+											setDraggedTaskId(task.id);
+										}}
+										onDragOver={(e) => {
+											setDraggedOverTaskId(Number(e.currentTarget.id));
+										}}
+										onDragEnd={updateTaskOrder}
+									>
+										<p>{task.name}</p>
+										<DeleteIcon
+											onClick={async (e) => {
+												e.stopPropagation();
+
+												if (selectedTaskId === task.id) {
+													setSelectedTaskId(undefined);
+												}
+												await deleteTask(task.id);
+											}}
+										/>
+									</li>
+									{showInsertTaskAfter && insertTaskJsx}
+								</Fragment>
+							);
+						})}
 				</ul>
 			</div>
 			{selectedTaskId && (
 				<div className={styles.editTaskPanel}>
+					<div className={styles.backToTasksButton}>
+						<DefaultButton onClick={() => setSelectedTaskId(undefined)}>Back</DefaultButton>
+					</div>
 					<EditTask
 						key={selectedTaskId}
 						task={taskRecord[selectedTaskId]}
