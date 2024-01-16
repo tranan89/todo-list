@@ -1,4 +1,6 @@
 .tasksPanel {
+	display: flex;
+	flex-direction: column;
 	max-width: 400px;
 	flex-shrink: 0;
 	padding-right: var(--spacingL);
@@ -7,7 +9,7 @@
 
 	ul {
 		margin-top: var(--spacingM);
-		position: relative;
+		overflow-y: auto;
 	}
 }
 
