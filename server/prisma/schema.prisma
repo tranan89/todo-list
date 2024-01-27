@@ -25,4 +25,6 @@ model TodoTask {
   updatedAt DateTime @updatedAt
   name      String   @db.VarChar(255)
   description  String?   @db.Text
+
+  @@index([listId], type: Hash)
 }
