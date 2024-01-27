@@ -1,57 +1,70 @@
 import type { Context, Next } from 'koa';
-import Joi from 'joi';
+import { z } from 'zod';
 
-type Schemas = {
-	body?: Joi.Schema;
-	query?: Joi.Schema;
-	params?: Joi.Schema;
+type Schemas<body, query, params> = {
+	body?: body extends z.Schema ? body : undefined;
+	query?: query extends z.Schema ? query : undefined;
+	params?: params extends z.Schema ? params : undefined;
+};
+type Result<body, query, params> = {
+	parsedBody: body extends z.Schema ? z.infer<body> : undefined;
+	parsedQuery: query extends z.Schema ? z.infer<query> : undefined;
+	parsedParams: params extends z.Schema ? z.infer<params> : undefined;
 };
 
-const validate = (ctx: Context) => (schemas: Schemas) => {
-	const { body: bodySchema, query: querySchema, params: paramsSchema } = schemas;
-	const { query = {}, params = {}, request: { body = {} } = {} } = ctx;
-	let errorMsg = '';
+export interface ValidateContext {
+	validate: <body, query, params>(
+		schemas: Schemas<body, query, params>,
+	) => Result<body, query, params>;
+}
 
-	if (bodySchema) {
-		const { error, value } = bodySchema.validate(body);
+const validate = (ctx: Context) => {
+	const validate: ValidateContext['validate'] = (schemas) => {
+		const { body: bodySchema, query: querySchema, params: paramsSchema } = schemas;
+		const { query = {}, params = {}, request: { body = {} } = {} } = ctx;
+		let errorMsg = '';
+		let parsedBody;
+		let parsedQuery;
+		let parsedParams;
 
-		if (error) {
-			errorMsg += `Body validation error: ${error.message} `;
-		} else {
-			ctx.parsedRequestBody = {
-				...value, // Parse numbers and booleans from strings and set defaults, can't mutate ctx.body
-			};
+		if (bodySchema) {
+			const result = bodySchema.safeParse(body);
+
+			if (!result.success) {
+				errorMsg += `Body validation error: ${result.error.message} `;
+			} else {
+				parsedBody = result.data;
+			}
 		}
-	}
-	if (querySchema) {
-		const { error, value } = querySchema.validate(query);
+		if (querySchema) {
+			const result = querySchema.safeParse(query);
 
-		if (error) {
-			errorMsg += `Query validation error: ${error.message} `;
-		} else {
-			ctx.parsedQuery = {
-				// Parse numbers and booleans from strings and set defaults
-				// can't mutate ctx.query
-				...value,
-			};
+			if (!result.success) {
+				errorMsg += `Query validation error: ${result.error.message} `;
+			} else {
+				parsedQuery = result.data;
+			}
 		}
-	}
-	if (paramsSchema) {
-		const { error, value } = paramsSchema.validate(params);
+		if (paramsSchema) {
+			const result = paramsSchema.safeParse(params);
 
-		if (error) {
-			errorMsg += `Params validation error: ${error.message} `;
-		} else {
-			ctx.parsedParams = {
-				// Parse numbers and booleans from strings and set defaults
-				// can't mutate ctx.query
-				...value,
-			};
+			if (!result.success) {
+				errorMsg += `Params validation error: ${result.error.message} `;
+			} else {
+				parsedParams = result.data;
+			}
 		}
-	}
-	errorMsg = errorMsg.trim();
+		errorMsg = errorMsg.trim();
 
-	return ctx.assert(!errorMsg, 400, errorMsg);
+		ctx.assert(!errorMsg, 400, errorMsg);
+
+		return {
+			parsedBody,
+			parsedQuery,
+			parsedParams,
+		};
+	};
+	return validate;
 };
 
 const validateMiddleware = () => (ctx: Context, next: Next) => {

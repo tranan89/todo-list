@@ -85,15 +85,6 @@ describe('todo-list', () => {
 			expect(response.status).toBe(200);
 			expect(response.body.data).toEqual([]);
 		});
-
-		it('assert query', async () => {
-			const response = await request.get(`/api/todo-lists?foo=bar`);
-
-			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Query validation error: "foo" is not allowed',
-			);
-		});
 	});
 
 	describe('getListById', () => {
@@ -128,17 +119,8 @@ describe('todo-list', () => {
 
 			expect(response.status).toBe(400);
 
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Params validation error: "listId" must be a number',
-			);
-		});
-
-		it('assert query', async () => {
-			const response = await request.get(`/api/todo-lists/123?foo=bar`);
-
-			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Query validation error: "foo" is not allowed',
+			expect(JSON.parse(response.text).error.title).toMatch(
+				/Params validation error: .*listId.*number.*/s,
 			);
 		});
 	});
@@ -161,11 +143,11 @@ describe('todo-list', () => {
 
 		describe('assert body', () => {
 			it(`assert name`, async () => {
-				const response = await request.post(`/api/todo-lists`).send({ ['name']: undefined });
+				const response = await request.post(`/api/todo-lists`).send({ ['name']: '' });
 
 				expect(response.status).toBe(400);
-				expect(JSON.parse(response.text).error.title).toEqual(
-					`Body validation error: "name" is required`,
+				expect(JSON.parse(response.text).error.title).toMatch(
+					/Body validation error: .*too_small.*name.*/s,
 				);
 			});
 		});
@@ -197,8 +179,8 @@ describe('todo-list', () => {
 			const response = await request.patch(`/api/todo-lists/12`).send({});
 
 			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				`Body validation error: "value" must have at least 1 key`,
+			expect(JSON.parse(response.text).error.title).toMatch(
+				/Body validation error: .*One of the fields must be defined.*/s,
 			);
 		});
 	});
@@ -221,8 +203,8 @@ describe('todo-list', () => {
 			const response = await request.post(`/api/todo-lists/12/join-room`).send({});
 
 			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				`Body validation error: "socketId" is required`,
+			expect(JSON.parse(response.text).error.title).toMatch(
+				/Body validation error: .*socketId.*Required.*/s,
 			);
 		});
 	});

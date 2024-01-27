@@ -1,21 +1,19 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import db from '../database.js';
 import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
+import { includeSchema } from './utils/schemas.js';
 import { getTodoListRoom, todoListUpdatedEvent } from './constants/socket.js';
 
-interface getListsContext extends Context {
-	parsedQuery: {
-		include?: string[];
-	};
-}
-export const getLists = async (ctx: getListsContext) => {
-	ctx.validate({
-		query: Joi.object().keys({
-			include: Joi.array().items(Joi.string()).single(),
-		}),
+export const getLists = async (ctx: Context) => {
+	const { parsedQuery } = ctx.validate({
+		query: z
+			.object({
+				include: includeSchema,
+			})
+			.partial(),
 	});
-	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
+	const select = getSelectFromInclude(parsedQuery.include);
 
 	const data = await db.todoList.findMany({
 		select,
@@ -27,30 +25,22 @@ export const getLists = async (ctx: getListsContext) => {
 	ctx.body = { data };
 };
 
-interface getListsContext extends Context {
-	parsedParams: {
-		listId: number;
-	};
-	parsedQuery: {
-		include?: string[];
-	};
-}
 export const getListById = async (ctx: Context) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-			})
-			.required(),
-		query: Joi.object().keys({
-			include: Joi.array().items(Joi.string()).single(),
+	const { parsedQuery, parsedParams } = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
 		}),
+		query: z
+			.object({
+				include: includeSchema,
+			})
+			.partial(),
 	});
-	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
+	const select = getSelectFromInclude(parsedQuery.include);
 
 	const data = await db.todoList.findUnique({
 		where: {
-			id: ctx.parsedParams.listId,
+			id: parsedParams.listId,
 		},
 		select,
 	});
@@ -58,62 +48,42 @@ export const getListById = async (ctx: Context) => {
 	ctx.body = { data };
 };
 
-interface createListContext extends Context {
-	parsedRequestBody: {
-		name: string;
-	};
-}
-export const createList = async (ctx: createListContext) => {
-	ctx.validate({
-		body: Joi.object()
-			.keys({
-				name: Joi.string().required(),
-			})
-			.unknown()
-			.required(),
+export const createList = async (ctx: Context) => {
+	const { parsedBody } = ctx.validate({
+		body: z.object({
+			name: z.string().min(2),
+		}),
 	});
-	const { parsedRequestBody } = ctx;
 
-	const { id: listId } = await db.todoList.create({ data: parsedRequestBody });
+	const { id: listId } = await db.todoList.create({ data: parsedBody });
 
 	ctx.body = { data: { listId } };
 };
 
-interface updateListContext extends Context {
-	parsedParams: {
-		listId: number;
-	};
-	parsedRequestBody: {
-		name?: string;
-		taskIds?: number[];
-	};
-}
-export const updateListById = async (ctx: updateListContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-			})
-			.required(),
-		body: Joi.object()
-			.keys({
-				name: Joi.string(),
-				taskIds: Joi.array().items(Joi.number()),
-			})
-			.min(1)
-			.unknown()
-			.required(),
-	});
+export const updateListById = async (ctx: Context) => {
 	const {
-		parsedRequestBody,
 		parsedParams: { listId },
-	} = ctx;
+		parsedBody,
+	} = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+		}),
+		body: z
+			.object({
+				name: z.string().min(2),
+				taskIds: z.array(z.number()),
+			})
+			.partial()
+			.refine(({ name, taskIds }) => name !== undefined || taskIds !== undefined, {
+				message: 'One of the fields must be defined',
+			}),
+	});
 
 	await db.todoList.update({
 		where: {
 			id: listId,
 		},
-		data: parsedRequestBody,
+		data: parsedBody,
 	});
 
 	ctx.io.emit({
@@ -125,32 +95,18 @@ export const updateListById = async (ctx: updateListContext) => {
 	ctx.status = 204;
 };
 
-interface joinListRoomContext extends Context {
-	parsedParams: {
-		listId: number;
-	};
-	parsedRequestBody: {
-		socketId: string;
-	};
-}
-export const joinListRoom = async (ctx: joinListRoomContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-			})
-			.required(),
-		body: Joi.object()
-			.keys({
-				socketId: Joi.string().required(),
-			})
-			.unknown()
-			.required(),
-	});
+export const joinListRoom = async (ctx: Context) => {
 	const {
 		parsedParams: { listId },
-		parsedRequestBody: { socketId },
-	} = ctx;
+		parsedBody: { socketId },
+	} = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+		}),
+		body: z.object({
+			socketId: z.string(),
+		}),
+	});
 
 	ctx.io.joinRoom({ socketId, room: getTodoListRoom(listId as number) });
 

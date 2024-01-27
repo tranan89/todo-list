@@ -1,7 +1,8 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import db from '../database.js';
 import type { Context } from '../types/index.js';
 import { getSelectFromInclude } from './utils/index.js';
+import { includeSchema } from './utils/schemas.js';
 import {
 	getTodoListRoom,
 	todoTaskCreatedEvent,
@@ -9,30 +10,22 @@ import {
 	todoTaskUpdatedEvent,
 } from './constants/socket.js';
 
-interface getTasksByListIdContext extends Context {
-	parsedParams: {
-		listId: number;
-	};
-	parsedQuery: {
-		include?: string[];
-	};
-}
-export const getTasksByListId = async (ctx: getTasksByListIdContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-			})
-			.required(),
-		query: Joi.object().keys({
-			include: Joi.array().items(Joi.string()).single(),
+export const getTasksByListId = async (ctx: Context) => {
+	const { parsedQuery, parsedParams } = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
 		}),
+		query: z
+			.object({
+				include: includeSchema,
+			})
+			.partial(),
 	});
-	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
+	const select = getSelectFromInclude(parsedQuery.include);
 
 	const data = await db.todoTask.findMany({
 		where: {
-			listId: ctx.parsedParams.listId,
+			listId: parsedParams.listId,
 		},
 		select,
 	});
@@ -40,32 +33,23 @@ export const getTasksByListId = async (ctx: getTasksByListIdContext) => {
 	ctx.body = { data };
 };
 
-interface getTaskByIdContext extends Context {
-	parsedParams: {
-		listId: number;
-		taskId: number;
-	};
-	parsedQuery: {
-		include?: string[];
-	};
-}
-export const getTaskById = async (ctx: getTaskByIdContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-				taskId: Joi.number().required(),
-			})
-			.required(),
-		query: Joi.object().keys({
-			include: Joi.array().items(Joi.string()).single(),
+export const getTaskById = async (ctx: Context) => {
+	const { parsedQuery, parsedParams } = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+			taskId: z.coerce.number(),
 		}),
+		query: z
+			.object({
+				include: includeSchema,
+			})
+			.partial(),
 	});
-	const select = getSelectFromInclude(ctx.parsedQuery.include as string[]);
+	const select = getSelectFromInclude(parsedQuery.include);
 
 	const data = await db.todoTask.findUnique({
 		where: {
-			id: ctx.parsedParams.taskId,
+			id: parsedParams.taskId,
 		},
 		select,
 	});
@@ -73,37 +57,23 @@ export const getTaskById = async (ctx: getTaskByIdContext) => {
 	ctx.body = { data };
 };
 
-interface createTaskContext extends Context {
-	parsedParams: {
-		listId: number;
-	};
-	parsedRequestBody: {
-		name: string;
-	};
-}
-export const createTask = async (ctx: createTaskContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-			})
-			.required(),
-		body: Joi.object()
-			.keys({
-				name: Joi.string().required(),
-			})
-			.unknown()
-			.required(),
-	});
+export const createTask = async (ctx: Context) => {
 	const {
-		parsedRequestBody,
 		parsedParams: { listId },
-	} = ctx;
+		parsedBody,
+	} = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+		}),
+		body: z.object({
+			name: z.string().min(2),
+		}),
+	});
 
 	const taskId = await db.$transaction(async (tx) => {
 		const { id: taskId } = await tx.todoTask.create({
 			data: {
-				...parsedRequestBody,
+				...parsedBody,
 				listId,
 			},
 		});
@@ -136,42 +106,26 @@ export const createTask = async (ctx: createTaskContext) => {
 	ctx.body = { data: { taskId } };
 };
 
-interface updateTaskContext extends Context {
-	parsedParams: {
-		listId: number;
-		taskId: number;
-	};
-	parsedRequestBody: {
-		name?: string;
-		description?: string;
-	};
-}
-export const updateTaskById = async (ctx: updateTaskContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-				taskId: Joi.number().required(),
-			})
-			.required(),
-		body: Joi.object()
-			.keys({
-				name: Joi.string().required(),
-				description: Joi.string(),
-			})
-			.unknown()
-			.required(),
-	});
+export const updateTaskById = async (ctx: Context) => {
 	const {
-		parsedRequestBody,
-		parsedParams: { taskId, listId },
-	} = ctx;
+		parsedParams: { listId, taskId },
+		parsedBody,
+	} = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+			taskId: z.coerce.number(),
+		}),
+		body: z.object({
+			name: z.string().min(2),
+			description: z.string(),
+		}),
+	});
 
 	await db.todoTask.update({
 		where: {
 			id: taskId,
 		},
-		data: parsedRequestBody,
+		data: parsedBody,
 	});
 
 	ctx.io.emit({
@@ -183,24 +137,15 @@ export const updateTaskById = async (ctx: updateTaskContext) => {
 	ctx.status = 204;
 };
 
-interface deleteTaskContext extends Context {
-	parsedParams: {
-		listId: number;
-		taskId: number;
-	};
-}
-export const deleteTaskById = async (ctx: deleteTaskContext) => {
-	ctx.validate({
-		params: Joi.object()
-			.keys({
-				listId: Joi.number().required(),
-				taskId: Joi.number().required(),
-			})
-			.required(),
-	});
+export const deleteTaskById = async (ctx: Context) => {
 	const {
-		parsedParams: { taskId, listId },
-	} = ctx;
+		parsedParams: { listId, taskId },
+	} = ctx.validate({
+		params: z.object({
+			listId: z.coerce.number(),
+			taskId: z.coerce.number(),
+		}),
+	});
 
 	await db.$transaction(async (tx) => {
 		await tx.todoTask.delete({

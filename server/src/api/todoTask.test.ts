@@ -97,17 +97,8 @@ describe('todo-task', () => {
 			const response = await request.get(`/api/todo-lists/test/tasks`);
 
 			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Params validation error: "listId" must be a number',
-			);
-		});
-
-		it('assert query', async () => {
-			const response = await request.get(`/api/todo-lists/${listId}/tasks?foo=bar`);
-
-			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Query validation error: "foo" is not allowed',
+			expect(JSON.parse(response.text).error.title).toMatch(
+				/Params validation error: .*listId.*number.*/s,
 			);
 		});
 	});
@@ -145,17 +136,8 @@ describe('todo-task', () => {
 			const response = await request.get(`/api/todo-lists/${listId}/tasks/test`);
 
 			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Params validation error: "taskId" must be a number',
-			);
-		});
-
-		it('assert query', async () => {
-			const response = await request.get(`/api/todo-lists/${listId}/tasks/123?foo=bar`);
-
-			expect(response.status).toBe(400);
-			expect(JSON.parse(response.text).error.title).toEqual(
-				'Query validation error: "foo" is not allowed',
+			expect(JSON.parse(response.text).error.title).toMatch(
+				/Params validation error: .*taskId.*number.*/s,
 			);
 		});
 	});
@@ -200,11 +182,11 @@ describe('todo-task', () => {
 			it(`assert name`, async () => {
 				const response = await request
 					.post(`/api/todo-lists/${listId}/tasks`)
-					.send({ ['name']: undefined });
+					.send({ ['name']: '' });
 
 				expect(response.status).toBe(400);
-				expect(JSON.parse(response.text).error.title).toEqual(
-					`Body validation error: "name" is required`,
+				expect(JSON.parse(response.text).error.title).toMatch(
+					/Body validation error: .*too_small.*name.*/s,
 				);
 			});
 		});
@@ -238,11 +220,11 @@ describe('todo-task', () => {
 			it(`assert name`, async () => {
 				const response = await request
 					.patch(`/api/todo-lists/${listId}/tasks/12`)
-					.send({ ...mockTodoTask, name: undefined });
+					.send({ ...mockTodoTask, name: '' });
 
 				expect(response.status).toBe(400);
-				expect(JSON.parse(response.text).error.title).toEqual(
-					`Body validation error: "name" is required`,
+				expect(JSON.parse(response.text).error.title).toMatch(
+					/Body validation error: .*too_small.*name.*/s,
 				);
 			});
 
@@ -252,8 +234,8 @@ describe('todo-task', () => {
 					.send({ ...mockTodoTask, description: 123 });
 
 				expect(response.status).toBe(400);
-				expect(JSON.parse(response.text).error.title).toEqual(
-					`Body validation error: "description" must be a string`,
+				expect(JSON.parse(response.text).error.title).toMatch(
+					/Body validation error: .*description.*Expected string, received number.*/s,
 				);
 			});
 		});
