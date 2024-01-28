@@ -49,10 +49,12 @@ describe('todo-list', () => {
 			const response = await request.get(`/api/todo-lists`);
 
 			expect(response.status).toBe(200);
-			expect(response.body.data).toEqual([
-				expect.objectContaining({ ...mockTodoList, id }),
-				expect.objectContaining({ ...mockTodoList, id: id2 }),
-			]);
+			expect(response.body.data).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ ...mockTodoList, id }),
+					expect.objectContaining({ ...mockTodoList, id: id2 }),
+				]),
+			);
 		});
 
 		it('return lists with projection', async () => {

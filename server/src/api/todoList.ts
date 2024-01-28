@@ -87,7 +87,7 @@ export const updateListById = async (ctx: Context) => {
 	});
 
 	ctx.io.emit({
-		room: getTodoListRoom(listId as number),
+		room: getTodoListRoom(listId),
 		event: todoListUpdatedEvent,
 		data: { listId },
 	});
@@ -108,7 +108,7 @@ export const joinListRoom = async (ctx: Context) => {
 		}),
 	});
 
-	ctx.io.joinRoom({ socketId, room: getTodoListRoom(listId as number) });
+	ctx.io.joinRoom({ socketId, room: getTodoListRoom(listId) });
 
 	ctx.status = 204;
 };

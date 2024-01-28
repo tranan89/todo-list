@@ -98,7 +98,7 @@ export const createTask = async (ctx: Context) => {
 	});
 
 	ctx.io.emit({
-		room: getTodoListRoom(listId as number),
+		room: getTodoListRoom(listId),
 		event: todoTaskCreatedEvent,
 		data: { listId, taskId },
 	});
@@ -129,7 +129,7 @@ export const updateTaskById = async (ctx: Context) => {
 	});
 
 	ctx.io.emit({
-		room: getTodoListRoom(listId as number),
+		room: getTodoListRoom(listId),
 		event: todoTaskUpdatedEvent,
 		data: { listId, taskId },
 	});
@@ -172,7 +172,7 @@ export const deleteTaskById = async (ctx: Context) => {
 	});
 
 	ctx.io.emit({
-		room: getTodoListRoom(listId as number),
+		room: getTodoListRoom(listId),
 		event: todoTaskDeletedEvent,
 		data: { listId, taskId },
 	});
